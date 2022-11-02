@@ -1,37 +1,18 @@
 ---
-version: "3.7"
-
-# This Docker composition file is used to build and test the container
-
-secrets:
-  quote_txt:
-    file: ./src/secrets/quote.txt
+version: "3.8"
 
 services:
-  example:
-    # Run the container normally
-    build:
-      # VERSION must be specified on the command line:
-      # e.g., --build-arg VERSION=0.0.1
-      context: .
-      dockerfile: Dockerfile
-    image: cisagov/example
+  commander:
+    image: cisagov/cyhy-commander:0.0.3
     init: true
     restart: "no"
     environment:
-      - ECHO_MESSAGE=Hello World from docker compose!
-    ports:
-      - target: 8080
-        published: 8080
-        protocol: tcp
-        mode: host
-    secrets:
-      - source: quote_txt
-        target: quote.txt
-
-  example-version:
-    # Run the container to collect version information
-    image: cisagov/example
-    init: true
-    restart: "no"
-    command: --version
+      - CONTAINER_PRESERVE_OWNER=/data
+      - CONTAINER_VERBOSE=true
+      - CYHY_CONFIG_SECTION=testing
+      - CYHY_GID=1000
+      - CYHY_UID=1000
+    volumes:
+      - type: bind
+        source: ./tests/config/commander_data_volume
+        target: /data
