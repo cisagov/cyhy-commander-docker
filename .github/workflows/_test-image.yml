@@ -14,6 +14,11 @@ on:
         required: true
         type: string
       # Optional inputs
+      data_artifact_path:
+        description: "The artifact path used to create the data archive"
+        default: data
+        required: false
+        type: string
       pip_cache_dir:
         description: "The pip cache directory"
         default: ~/.cache/pip
@@ -48,6 +53,14 @@ jobs:
         with:
           # TODO: change to 'egress-policy: block' after couple of runs
           egress-policy: audit
+      - name: Check if data artifact key is available
+        id: check_data_artifact_key
+        run: |
+          if [ -n "${{ secrets.data_artifact_key }}" ]; then
+            echo "do_encryption=true" >> $GITHUB_OUTPUT
+          else
+            echo "do_encryption=false" >> $GITHUB_OUTPUT
+          fi
       - name: Check if image artifact key is available
         id: check_image_artifact_key
         run: |
@@ -93,19 +106,29 @@ jobs:
           ${{ env.ARTIFACT_WORK_DIR }}/image.tar.7z | docker load
       - name: Set data directory permissions
         run: |
-          chmod a+rwx data
+          chmod a+rwx ${{ inputs.data_artifact_path }}
       - name: Run tests
         env:
           PYTHONUNBUFFERED: 1
           RELEASE_TAG: ${{ github.event.release.tag_name }}
         run: pytest | tee data/pytests.log
-      - name: Compress and encrypt data directory
-        if: ${{ always() }}
+      - name: Compress data directory unencrypted
+        if: steps.check_data_artifact_key.outputs.do_encryption == 'false'
         run: |
-          tar cf - data | \
+          tar cf data.tar.gz ${{ inputs.data_artifact_path }}
+      - name: Compress and encrypt data directory
+        if: steps.check_data_artifact_key.outputs.do_encryption == 'true'
+        run: |
+          tar cf - ${{ inputs.data_artifact_path }} | \
           7za a -p${{ secrets.data_artifact_key }} -si data.tar.7z
-      - name: Upload data artifacts
-        if: ${{ always() }}
+      - name: Upload unencrypted data artifacts
+        if: steps.check_data_artifact_key.outputs.do_encryption == 'false'
+        uses: actions/upload-artifact@83fd05a356d7e2593de66fc9913b3002723633cb
+        with:
+          name: ${{ inputs.data_artifact_name }}
+          path: data.tar.gz
+      - name: Upload encrypted data artifacts
+        if: steps.check_data_artifact_key.outputs.do_encryption == 'true'
         uses: actions/upload-artifact@83fd05a356d7e2593de66fc9913b3002723633cb
         with:
           name: ${{ inputs.data_artifact_name }}

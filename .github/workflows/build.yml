@@ -77,6 +77,7 @@ jobs:
     uses: ./.github/workflows/_test-image.yml
     with:
       data_artifact_name: ${{ needs.config.outputs.normal_data_artifact_name }}
+      data_artifact_path: ${{ needs.config.outputs.normal_data_artifact_path }}
       image_artifact_name: ${{ needs.config.outputs.normal_image_artifact_name }}
 
   build-and-push:

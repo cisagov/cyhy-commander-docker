@@ -14,6 +14,9 @@ on:
       normal_data_artifact_name:
         description: "The name of the normal data artifact"
         value: normal-data
+      normal_data_artifact_path:
+        description: "The path to the normal data artifact directory"
+        value: tests/config/commander_data_volume
       normal_image_artifact_name:
         description: "The name of the normal image artifact"
         value: normal-test-image
