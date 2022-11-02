@@ -1,29 +1,112 @@
-"""pytest plugin configuration.
+"""pytest configuration."""
 
-https://docs.pytest.org/en/latest/writing_plugins.html#conftest-py-plugins
-"""
+# Standard Python Libraries
+from pathlib import Path
+
 # Third-Party Libraries
+import docker
 import pytest
 
-MAIN_SERVICE_NAME = "example"
+COMMANDER_DATA_VOLUME = "tests/config/commander_data_volume"
+MAIN_IMAGE_NAME = "local/test-image:latest"
+MAIN_SERVICE_NAME = "commander"
+MONGO_IMAGE_NAME = "mongo:3.6"
+MONGO_INIT_JS_FILE = "tests/config/mongo-init.js"
+MONGO_ROOT_PASSWORD_FILE = "tests/config/mongo-root-passwd.txt"
+MONGO_SERVICE_NAME = "mongo"
+NETWORK_NAME = "cyhy-test-network"
+VERSION_FILE = "src/version.txt"
 VERSION_SERVICE_NAME = f"{MAIN_SERVICE_NAME}-version"
 
-
-@pytest.fixture(scope="session")
-def main_container(dockerc):
-    """Return the main container from the Docker composition."""
-    # find the container by name even if it is stopped already
-    return dockerc.containers(service_names=[MAIN_SERVICE_NAME], stopped=True)[0]
+client = docker.from_env()
 
 
 @pytest.fixture(scope="session")
-def version_container(dockerc):
-    """Return the version container from the Docker composition.
+def docker_network():
+    """Create a docker network for the tests."""
+    network = client.networks.create(NETWORK_NAME, driver="bridge", scope="local")
+    yield network
+    network.remove()
 
-    The version container should just output the version of its underlying contents.
-    """
-    # find the container by name even if it is stopped already
-    return dockerc.containers(service_names=[VERSION_SERVICE_NAME], stopped=True)[0]
+
+@pytest.fixture(scope="session")
+def main_container(docker_network):
+    """Fixture for the main Commander container."""
+    # Create the container but don't start it yet.
+    # Mongo must be running before the Commander can start.
+    container = client.containers.create(
+        MAIN_IMAGE_NAME,
+        detach=True,
+        environment={
+            "CONTAINER_VERBOSE": True,
+            "CYHY_CONFIG_SECTION": "testing",
+        },
+        name=MAIN_SERVICE_NAME,
+        network=docker_network.name,
+        ports={},
+        volumes={
+            str(Path.cwd() / Path(COMMANDER_DATA_VOLUME)): {
+                "bind": "/data",
+                "driver": "local",
+            }
+        },
+    )
+    yield container
+    container.remove(force=True)
+
+
+@pytest.fixture(scope="session")
+def version_container():
+    """Fixture for the version container."""
+    container = client.containers.run(
+        MAIN_IMAGE_NAME,
+        command="--version",
+        detach=True,
+        name=VERSION_SERVICE_NAME,
+    )
+    yield container
+    container.remove(force=True)
+
+
+@pytest.fixture(scope="session")
+def mongo_container(docker_network):
+    """Fixture for the database container."""
+    container = client.containers.run(
+        MONGO_IMAGE_NAME,
+        detach=True,
+        environment={
+            "MONGO_INITDB_DATABASE": "test_cyhy",
+            "MONGO_INITDB_ROOT_USERNAME": "root",
+            "MONGO_INITDB_ROOT_PASSWORD_FILE": "/run/secrets/mongo_root_passwd_txt",
+        },
+        name=MONGO_SERVICE_NAME,
+        network=docker_network.name,
+        ports={},
+        volumes={
+            str(Path.cwd() / Path(MONGO_INIT_JS_FILE)): {
+                "bind": "/docker-entrypoint-initdb.d/mongo-init.js",
+                "driver": "local",
+                "mode": "ro",
+            },
+            # Pretend that we've got the secret file mounted
+            str(Path.cwd() / Path(MONGO_ROOT_PASSWORD_FILE)): {
+                "bind": "/run/secrets/mongo_root_passwd_txt",
+                "driver": "local",
+                "mode": "ro",
+            },
+        },
+    )
+    yield container
+    container.remove(force=True)
+
+
+@pytest.fixture(scope="session")
+def project_version():
+    """Get the project version."""
+    pkg_vars = {}
+    with open(VERSION_FILE) as f:
+        exec(f.read(), pkg_vars)  # nosec
+    return pkg_vars["__version__"]
 
 
 def pytest_addoption(parser):

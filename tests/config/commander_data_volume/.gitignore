@@ -1,0 +1,6 @@
+# Ignore everything in this directory
+*
+# Except the following files
+!.gitignore
+!commander.conf
+!cyhy.conf
