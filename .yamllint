@@ -11,3 +11,9 @@ rules:
   # yamllint doesn't like when we use yes and no for true and false,
   # but that's pretty standard in Ansible.
   truthy: disable
+
+  # When pinning GitHub Actions with full SHAs we run into the inability to
+  # wrap yaml in any sane way.  The files can become almost unreadable.
+  line-length:
+    ignore: |
+      /.github/workflows/*.yml
