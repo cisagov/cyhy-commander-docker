@@ -7,7 +7,7 @@ on:
     outputs:
       go_version:
         description: "The go version"
-        value: '1.16'
+        value: '1.19'
       image_name:
         description: "The Docker image name"
         value: cisagov/cyhy-commander
@@ -28,7 +28,7 @@ on:
         value: '3.10'
       shfmt_version:
         description: "The shfmt version"
-        value: v3.4.3
+        value: v3.5.1
 
 jobs:
   diagnostics:

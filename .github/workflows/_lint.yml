@@ -21,7 +21,7 @@ on:
         required: false
         type: string
       go_version:
-        default: '1.16'
+        default: '1.19'
         required: false
         type: string
       python_version:
@@ -29,7 +29,7 @@ on:
         required: false
         type: string
       shfmt_version:
-        default: 'v3.4.3'
+        default: 'v3.5.1'
         required: false
         type: string
 
