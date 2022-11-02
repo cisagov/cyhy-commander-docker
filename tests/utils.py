@@ -7,7 +7,7 @@ import threading
 import time
 
 
-class LogTailer(object):
+class LogTailer:
     """Create a separate threat to follow the logs and add to a queue."""
 
     def __init__(self, container, since: datetime | int = 0):
@@ -36,7 +36,7 @@ class LogTailer(object):
         return self.queue.empty()
 
 
-class RedactedPrinter(object):
+class RedactedPrinter:
     """Prints lines to stdout with redactions applied."""
 
     def __init__(self, redaction_regexes):
