@@ -111,7 +111,7 @@ jobs:
         env:
           PYTHONUNBUFFERED: 1
           RELEASE_TAG: ${{ github.event.release.tag_name }}
-        run: pytest | tee data/pytests.log
+        run: pytest | tee ${{ inputs.data_artifact_path }}/pytests.log
       - name: Compress data directory unencrypted
         if: steps.check_data_artifact_key.outputs.do_encryption == 'false'
         run: |
