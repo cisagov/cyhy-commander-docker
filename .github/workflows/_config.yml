@@ -1,0 +1,47 @@
+---
+
+name: config
+
+on:
+  workflow_call:
+    outputs:
+      go_version:
+        description: "The go version"
+        value: '1.16'
+      image_name:
+        description: "The Docker image name"
+        value: cisagov/cyhy-commander
+      normal_data_artifact_name:
+        description: "The name of the normal data artifact"
+        value: normal-data
+      normal_image_artifact_name:
+        description: "The name of the normal image artifact"
+        value: normal-test-image
+      platforms:
+        description: "The platforms to build"
+        value: linux/amd64,linux/arm/v6,linux/arm/v7,linux/arm64,linux/ppc64le,linux/s390x
+      python_version:
+        description: "The Python version"
+        value: '3.10'
+      shfmt_version:
+        description: "The shfmt version"
+        value: v3.4.3
+
+jobs:
+  diagnostics:
+    name: "Diagnostics"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@2e205a28d0e1da00c5f53b161f4067b052c61f34
+        with:  # TODO: change to 'egress-policy: block' after couple of runs
+          egress-policy: audit
+
+      - name: Check GitHub Status
+        uses: crazy-max/ghaction-github-status@8d1f141b985510f36a0376b75b4dc8b0cfc90e8a
+        with:
+          overall_threshold: major
+          packages_threshold: major_outage
+
+      - name: Dump context
+        uses: crazy-max/ghaction-dump-context@516dbb0c760f39b4cdd750ae095f1688780f68f4
