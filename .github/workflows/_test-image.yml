@@ -48,13 +48,6 @@ jobs:
         with:
           # TODO: change to 'egress-policy: block' after couple of runs
           egress-policy: audit
-      - name: Check data artifact key secret
-        id: check_data_artifact_key
-        run: |
-          if [ -z "${{ secrets.data_artifact_key }}" ]; then
-            echo "::warning::Set the data_artifact_key secret."
-            exit 1
-          fi
       - name: Check if image artifact key is available
         id: check_image_artifact_key
         run: |
