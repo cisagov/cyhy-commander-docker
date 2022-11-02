@@ -1,6 +1,7 @@
 """pytest configuration."""
 
 # Standard Python Libraries
+import os
 from pathlib import Path
 
 # Third-Party Libraries
@@ -19,6 +20,24 @@ VERSION_FILE = "src/version.txt"
 VERSION_SERVICE_NAME = f"{MAIN_SERVICE_NAME}-version"
 
 client = docker.from_env()
+
+
+@pytest.fixture(autouse=True)
+def group_github_log_lines(request):
+    """Group log lines when running in GitHub actions."""
+    # Group output from each test with workflow log groups
+    # https://help.github.com/en/actions/reference/workflow-commands-for-github-actions#grouping-log-lines
+
+    if os.environ.get("GITHUB_ACTIONS") != "true":
+        # Not running in GitHub actions
+        yield
+        return
+    # Group using the current test name
+    print()
+    print(f"::group::{request.node.name}")
+    yield
+    print()
+    print("::endgroup::")
 
 
 @pytest.fixture(scope="session")
