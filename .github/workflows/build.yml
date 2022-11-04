@@ -90,14 +90,12 @@ jobs:
     name: "Build image ${{ matrix.platform }}"
     uses: ./.github/workflows/_build-image.yml
     with:
-      build_args: |
-        VERSION=${{ needs.metadata.outputs.source_version }}
       image_labels: ${{ needs.metadata.outputs.image_labels }}
       image_tags: ${{ needs.metadata.outputs.image_tags }}
       platforms: ${{ matrix.platform }}
     secrets:
-      docker_password: ${{ secrets.DOCKER_PASSWORD }}
-      docker_username: ${{ secrets.DOCKER_USERNAME }}
+      build_args: |
+        VERSION=${{ needs.metadata.outputs.source_version }}
 
   build-multi-platform-image:
     needs: [config, docker-secrets, lint, metadata, test-normal-image]
@@ -107,13 +105,13 @@ jobs:
       packages: write
     uses: ./.github/workflows/_build-image.yml
     with:
-      build_args: |
-        VERSION=${{ needs.metadata.outputs.source_version }}
       image_labels: ${{ needs.metadata.outputs.image_labels }}
       image_tags: ${{ needs.metadata.outputs.image_tags }}
       platforms: ${{ needs.config.outputs.platforms }}
       push: true
     secrets:
+      build_args: |
+        VERSION=${{ needs.metadata.outputs.source_version }}
       docker_password: ${{ secrets.DOCKER_PASSWORD }}
       docker_username: ${{ secrets.DOCKER_USERNAME }}
 

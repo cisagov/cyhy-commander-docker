@@ -14,10 +14,6 @@ on:
         description: "Upload the image archive as an artifact if specified"
         required: false
         type: string
-      build_args:
-        description: "Build args to pass to the Dockerfile"
-        required: false
-        type: string
       docker_file:
         description: "The Dockerfile to use"
         default: ./Dockerfile
@@ -45,6 +41,9 @@ on:
     secrets:
       artifact_key:
         description: "Enables encryption of the image archive if specified"
+        required: false
+      build_args:
+        description: "Build args to pass to the Dockerfile"
         required: false
       docker_password:
         description: "The password for the Docker hub account (required for push)"
