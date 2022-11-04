@@ -87,7 +87,7 @@ jobs:
     strategy:
       matrix:
         platform: ${{ fromJson(needs.config.outputs.platforms) }}
-    name: "Build image ${{ matrix.platform }}"
+    name: "Build ${{ matrix.platform }}"
     uses: ./.github/workflows/_build-image.yml
     with:
       image_labels: ${{ needs.metadata.outputs.image_labels }}
@@ -107,7 +107,7 @@ jobs:
     with:
       image_labels: ${{ needs.metadata.outputs.image_labels }}
       image_tags: ${{ needs.metadata.outputs.image_tags }}
-      platforms: ${{ needs.config.outputs.platforms }}
+      platforms: ${{ fromJson(needs.config.outputs.platforms) }}
       push: true
     secrets:
       build_args: |
