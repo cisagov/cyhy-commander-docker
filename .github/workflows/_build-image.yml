@@ -6,7 +6,7 @@ on:
     inputs:
       # Required inputs
       platforms:
-        description: "The list of platforms to build images for"
+        description: "The platform(s) to build (lists as JSON)"
         required: true
         type: string
       # Optional inputs
@@ -124,6 +124,7 @@ jobs:
           context: .
           file: ${{ inputs.docker_file}}
           labels: ${{ inputs.image_labels }}
+          platforms: ${{ fromJSON(inputs.platforms) }}
           push: true
           tags: ${{ inputs.image_tags }}
 
@@ -138,6 +139,7 @@ jobs:
           file: ${{ inputs.docker_file}}
           labels: ${{ inputs.image_labels }}
           outputs: type=docker,dest=${{ env.ARTIFACT_WORK_DIR }}/image.tar
+          platforms: ${{ fromJSON(inputs.platforms) }}
           push: false
           tags: ${{ inputs.image_tags }}
 
