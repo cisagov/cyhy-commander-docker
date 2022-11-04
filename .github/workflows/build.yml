@@ -82,11 +82,11 @@ jobs:
       image_artifact_name: ${{ needs.config.outputs.test_image_artifact_name }}
 
   build-each-platform:
-    needs: [config, docker-secrets, lint, metadata, test-image]
+    needs: [config, docker-secrets, lint, metadata]
     if: github.event_name != 'pull_request'
     strategy:
       matrix:
-        platform: ${{ fromJson(needs.config.outputs.platforms) }}
+        platform: ${{ needs.config.outputs.platforms }}
     name: "Build image ${{ matrix.platform }}"
     uses: ./.github/workflows/_build-image.yml
     with:
