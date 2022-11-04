@@ -47,11 +47,11 @@ on:
         description: "Enables encryption of the image archive if specified"
         required: false
       docker_password:
-        description: "The password for the Docker hub account"
-        required: true
+        description: "The password for the Docker hub account (required for push)"
+        required: false
       docker_username:
-        description: "The username for the Docker hub account"
-        required: true
+        description: "The username for the Docker hub account (required for push)"
+        required: false
 
 env:
   ARTIFACT_WORK_DIR: /tmp/artifact-work
@@ -81,6 +81,20 @@ jobs:
         run: |
           sed --in-place 's/^FROM /FROM --platform=$TARGETPLATFORM /g' \
           ${{ inputs.docker_file }}
+
+      - name: Docker credentials available for push
+        if: inputs.push == true
+        run: |
+          return_code=0
+          if [ -z "${{ secrets.docker_username }}" ]; then
+            echo "::warning::Set the docker_username secret when using push=true."
+            return_code=1
+          fi
+          if [ -z "${{ secrets.docker_password }}" ]; then
+            echo "::warning::Set the docker_password secret when using push=true."
+            return_code=1
+          fi
+          exit $return_code
 
       - name: Login to Docker Hub
         if: inputs.push == true
