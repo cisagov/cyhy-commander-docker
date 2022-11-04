@@ -98,7 +98,7 @@ jobs:
         VERSION=${{ needs.metadata.outputs.source_version }}
 
   build-multi-platform-image:
-    needs: [config, docker-secrets, lint, metadata, test-normal-image]
+    needs: [build-each-platform, config, docker-secrets, lint, metadata, test-normal-image]
     if: github.event_name != 'pull_request'
     name: "Build multi-platform image"
     permissions:
