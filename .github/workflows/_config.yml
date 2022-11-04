@@ -12,14 +12,14 @@ on:
         description: "The Docker image name"
         value: cisagov/cyhy-commander
       data_artifact_name:
-        description: "The name of the normal data artifact"
-        value: normal-data
+        description: "The name of the data artifact"
+        value: data
       data_artifact_path:
-        description: "The path to the normal data artifact directory"
+        description: "The path to the data artifact directory"
         value: tests/config/commander_data_volume
       test_image_artifact_name:
-        description: "The name of the normal image artifact"
-        value: normal-test-image
+        description: "The name of the test image artifact"
+        value: test-image
       platforms:
         description: "The platforms to build"
         # value: linux/amd64,linux/arm/v6,linux/arm/v7,linux/arm64,linux/ppc64le,linux/s390x

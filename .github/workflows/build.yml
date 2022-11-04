@@ -72,7 +72,7 @@ jobs:
       build_args: |
         VERSION=${{ needs.metadata.outputs.source_version }}
 
-  test-normal-image:
+  test-image:
     name: "Test image"
     needs: [build-test-image, config]
     uses: ./.github/workflows/_test-image.yml
@@ -82,7 +82,7 @@ jobs:
       image_artifact_name: ${{ needs.config.outputs.test_image_artifact_name }}
 
   build-each-platform:
-    needs: [config, docker-secrets, lint, metadata, test-normal-image]
+    needs: [config, docker-secrets, lint, metadata, test-image]
     if: github.event_name != 'pull_request'
     strategy:
       matrix:
@@ -98,7 +98,7 @@ jobs:
         VERSION=${{ needs.metadata.outputs.source_version }}
 
   build-multi-platform-image:
-    needs: [build-each-platform, config, docker-secrets, lint, metadata, test-normal-image]
+    needs: [build-each-platform, config, docker-secrets, lint, metadata, test-image]
     if: github.event_name != 'pull_request'
     name: "Build multi-platform image"
     permissions:
