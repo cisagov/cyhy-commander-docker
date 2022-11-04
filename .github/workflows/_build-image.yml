@@ -135,7 +135,7 @@ jobs:
             echo "file_name=image.tar.7z" >> $GITHUB_OUTPUT
           else
             echo "do_encryption=false" >> $GITHUB_OUTPUT
-            echo "file_name=image.tar.gz" >> $GITHUB_OUTPUT
+            echo "file_name=image.tar" >> $GITHUB_OUTPUT
           fi
 
       - name: Encrypt image archive
