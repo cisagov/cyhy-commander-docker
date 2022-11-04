@@ -34,7 +34,7 @@ on:
         required: false
         type: boolean
       push:
-        description: "Push the image to the registries"
+        description: "Push the image to the registries (disables artifact upload)"
         default: false
         required: false
         type: boolean
@@ -110,11 +110,25 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Create directory for image storage
+      - name: Create directory for image archive storage
+        if: inputs.push != true
         run: mkdir -p ${{ env.ARTIFACT_WORK_DIR }}
 
-      - name: Build image
-        id: docker_build
+      - name: Build image for push
+        if: inputs.push == true
+        uses: docker/build-push-action@c56af957549030174b10d6867f20e78cfd7debc5
+        with:
+          build-args: ${{ secrets.build_args }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          context: .
+          file: ${{ inputs.docker_file}}
+          labels: ${{ inputs.image_labels }}
+          push: true
+          tags: ${{ inputs.image_tags }}
+
+      - name: Build image for archive
+        if: inputs.push != true
         uses: docker/build-push-action@c56af957549030174b10d6867f20e78cfd7debc5
         with:
           build-args: ${{ secrets.build_args }}
@@ -124,11 +138,12 @@ jobs:
           file: ${{ inputs.docker_file}}
           labels: ${{ inputs.image_labels }}
           outputs: type=docker,dest=${{ env.ARTIFACT_WORK_DIR }}/image.tar
-          push: ${{ inputs.push }}
+          push: false
           tags: ${{ inputs.image_tags }}
 
       - name: Check if artifact key is available
         id: check_artifact_key
+        if: inputs.push != true
         run: |
           if [ -n "${{ secrets.artifact_key }}" ]; then
             echo "do_encryption=true" >> $GITHUB_OUTPUT
@@ -139,14 +154,14 @@ jobs:
           fi
 
       - name: Encrypt image archive
-        if: steps.check_artifact_key.outputs.do_encryption == 'true'
+        if: ${{ (inputs.push == false) && (steps.check_artifact_key.outputs.do_encryption == 'true') }}
         run: |
           7za a -p${{ secrets.artifact_key }} \
           ${{ env.ARTIFACT_WORK_DIR }}/image.tar.7z \
           ${{ env.ARTIFACT_WORK_DIR }}/image.tar
 
       - name: Upload artifacts
-        if: inputs.artifact_name != ''
+        if: ${{ (inputs.push == false) && (inputs.artifact_name != '') }}
         uses: actions/upload-artifact@83fd05a356d7e2593de66fc9913b3002723633cb
         with:
           name: ${{ inputs.artifact_name }}
