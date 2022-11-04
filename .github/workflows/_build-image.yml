@@ -6,7 +6,7 @@ on:
     inputs:
       # Required inputs
       platforms:
-        description: "The platform(s) to build (lists as JSON)"
+        description: "The platforms to build (as JSON list)"
         required: true
         type: string
       # Optional inputs

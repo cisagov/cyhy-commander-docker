@@ -87,12 +87,12 @@ jobs:
     strategy:
       matrix:
         platform: ${{ fromJson(needs.config.outputs.platforms) }}
-    name: "Build ${{ matrix.platform }}"
+    name: "${{ matrix.platform }}"
     uses: ./.github/workflows/_build-image.yml
     with:
       image_labels: ${{ needs.metadata.outputs.image_labels }}
       image_tags: ${{ needs.metadata.outputs.image_tags }}
-      platforms: ${{ matrix.platform }}
+      platforms: "[${{ matrix.platform }}]"
     secrets:
       build_args: |
         VERSION=${{ needs.metadata.outputs.source_version }}
@@ -100,14 +100,14 @@ jobs:
   build-multi-platform-image:
     needs: [build-each-platform, config, docker-secrets, lint, metadata, test-image]
     if: github.event_name != 'pull_request'
-    name: "Build multi-platform image"
+    name: "Multi-platform"
     permissions:
       packages: write
     uses: ./.github/workflows/_build-image.yml
     with:
       image_labels: ${{ needs.metadata.outputs.image_labels }}
       image_tags: ${{ needs.metadata.outputs.image_tags }}
-      platforms: ${{ fromJson(needs.config.outputs.platforms) }}
+      platforms: ${{ needs.config.outputs.platforms }}
       push: true
     secrets:
       build_args: |
