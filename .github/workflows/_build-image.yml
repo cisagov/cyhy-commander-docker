@@ -6,7 +6,7 @@ on:
     inputs:
       # Required inputs
       platforms:
-        description: "The platforms to build (as JSON list)"
+        description: "The platform(s) to build (CSV)"
         required: true
         type: string
       # Optional inputs
@@ -124,7 +124,7 @@ jobs:
           context: .
           file: ${{ inputs.docker_file}}
           labels: ${{ inputs.image_labels }}
-          platforms: ${{ fromJSON(inputs.platforms) }}
+          platforms: ${{ inputs.platforms }}
           push: true
           tags: ${{ inputs.image_tags }}
 
@@ -139,7 +139,7 @@ jobs:
           file: ${{ inputs.docker_file}}
           labels: ${{ inputs.image_labels }}
           outputs: type=docker,dest=${{ env.ARTIFACT_WORK_DIR }}/image.tar
-          platforms: ${{ fromJSON(inputs.platforms) }}
+          platforms: ${{ inputs.platforms }}
           push: false
           tags: ${{ inputs.image_tags }}
 

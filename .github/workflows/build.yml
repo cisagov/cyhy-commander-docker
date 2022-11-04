@@ -67,7 +67,7 @@ jobs:
     with:
       artifact_name: ${{ needs.config.outputs.test_image_artifact_name }}
       image_labels: ${{ needs.metadata.outputs.image_labels }}
-      platforms: '["linux/amd64"]'
+      platforms: linux/amd64
     secrets:
       build_args: |
         VERSION=${{ needs.metadata.outputs.source_version }}
@@ -86,13 +86,13 @@ jobs:
     if: github.event_name != 'pull_request'
     strategy:
       matrix:
-        platform: ${{ fromJson(needs.config.outputs.platforms) }}
+        platform: ${{ fromJson(needs.config.outputs.platforms_json) }}
     name: "${{ matrix.platform }}"
     uses: ./.github/workflows/_build-image.yml
     with:
       image_labels: ${{ needs.metadata.outputs.image_labels }}
       image_tags: ${{ needs.metadata.outputs.image_tags }}
-      platforms: '["${{ matrix.platform }}"]'
+      platforms: ${{ matrix.platform }}
     secrets:
       build_args: |
         VERSION=${{ needs.metadata.outputs.source_version }}

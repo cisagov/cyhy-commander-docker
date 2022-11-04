@@ -21,8 +21,11 @@ on:
         description: "The name of the test image artifact"
         value: test-image
       platforms:
-        description: "The platforms to build (as a JSON array)"
-        value: '["linux/amd64", "linux/arm/v6", "linux/arm/v7", "linux/arm64", "linux/ppc64le", "linux/s390x"]'
+        description: "The platforms to build (CSV)"
+        value: linux/amd64,linux/arm/v6,linux/arm/v7,linux/arm64,linux/ppc64le,linux/s390x
+      platforms_json:  # TODO: Calculate this using jq
+        description: "The platforms to build (JSON)"
+        value: '["linux/amd64","linux/arm/v6","linux/arm/v7","linux/arm64","linux/ppc64le","linux/s390x"]'
       python_version:
         description: "The Python version"
         value: '3.10'
