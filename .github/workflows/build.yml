@@ -86,7 +86,7 @@ jobs:
     if: github.event_name != 'pull_request'
     strategy:
       matrix:
-        platform: ${{ needs.config.outputs.platforms }}
+        platform: ${{ fromJson(needs.config.outputs.platforms) }}
     name: "Build image ${{ matrix.platform }}"
     uses: ./.github/workflows/_build-image.yml
     with:
