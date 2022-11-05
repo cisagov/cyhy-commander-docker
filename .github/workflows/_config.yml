@@ -4,6 +4,12 @@ name: config
 
 on:
   workflow_call:
+    inputs:
+      platforms:
+        description: "The platforms to build (CSV)"
+        default: linux/amd64,linux/arm/v6,linux/arm/v7,linux/arm64,linux/ppc64le,linux/s390x
+        required: false
+        type: string
     outputs:
       go_version:
         description: "The go version"
@@ -22,10 +28,10 @@ on:
         value: test-image
       platforms:
         description: "The platforms to build (CSV)"
-        value: linux/amd64,linux/arm/v6,linux/arm/v7,linux/arm64,linux/ppc64le,linux/s390x
-      platforms_json:  # TODO: Calculate this using jq
+        value: ${{ inputs.platforms }}
+      platforms_json:
         description: "The platforms to build (JSON)"
-        value: '["linux/amd64","linux/arm/v6","linux/arm/v7","linux/arm64","linux/ppc64le","linux/s390x"]'
+        value: ${{ jobs.csv-to-json.outputs.platforms_json }}
       python_version:
         description: "The Python version"
         value: '3.10'
@@ -51,3 +57,19 @@ jobs:
 
       - name: Dump context
         uses: crazy-max/ghaction-dump-context@516dbb0c760f39b4cdd750ae095f1688780f68f4
+
+  csv-to-json:
+    name: "Convert platforms CSV to JSON"
+    runs-on: ubuntu-latest
+    outputs:
+      platforms_json: ${{ steps.csv-to-json.outputs.platforms_json }}
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@2e205a28d0e1da00c5f53b161f4067b052c61f34
+        with:  # TODO: change to 'egress-policy: block' after couple of runs
+          egress-policy: audit
+
+      - name: Convert CSV to JSON
+        id: csv-to-json
+        run: |
+          echo "platforms_json=$(echo -n ${{ inputs.platforms }} | jq --raw-input --compact-output 'split(",")')" >> $GITHUB_OUTPUT
