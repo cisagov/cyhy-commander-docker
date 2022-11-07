@@ -92,12 +92,17 @@ jobs:
     uses: ./.github/workflows/_build-image.yml
     with:
       image_labels: ${{ needs.metadata.outputs.image_labels }}
-      image_tags: ${{ needs.metadata.outputs.image_tags }}
+      image_tags: ${{ needs.config.outputs.image_name }}:cache-ignore
       modify_dockerfile: true
       platforms: ${{ matrix.platform }}
+      # TODO: Disable push and remove Docker credentials when issue resolved:
+      # https://github.com/moby/buildkit/issues/2887
+      push: true
     secrets:
       build_args: |
         VERSION=${{ needs.metadata.outputs.source_version }}
+      docker_password: ${{ secrets.DOCKER_PASSWORD }}
+      docker_username: ${{ secrets.DOCKER_USERNAME }}
 
   build-multi-platform-image:
     needs: [build-each-platform, config, docker-secrets, lint, metadata, test-image]
