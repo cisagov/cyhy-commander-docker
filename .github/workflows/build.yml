@@ -67,7 +67,6 @@ jobs:
     with:
       artifact_name: ${{ needs.config.outputs.test_image_artifact_name }}
       image_labels: ${{ needs.metadata.outputs.image_labels }}
-      modify_dockerfile: true
       platforms: linux/amd64
     secrets:
       build_args: |
@@ -93,7 +92,6 @@ jobs:
     with:
       image_labels: ${{ needs.metadata.outputs.image_labels }}
       image_tags: ${{ needs.config.outputs.image_name }}:cache-ignore
-      modify_dockerfile: true
       platforms: ${{ matrix.platform }}
       # TODO: Disable push and remove Docker credentials when issue resolved:
       # https://github.com/moby/buildkit/issues/2887
@@ -114,7 +112,6 @@ jobs:
     with:
       image_labels: ${{ needs.metadata.outputs.image_labels }}
       image_tags: ${{ needs.metadata.outputs.image_tags }}
-      modify_dockerfile: true
       platforms: ${{ needs.config.outputs.platforms }}
       push: true
     secrets:

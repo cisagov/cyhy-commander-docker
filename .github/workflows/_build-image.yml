@@ -28,11 +28,6 @@ on:
         default: local/test-image:latest
         required: false
         type: string
-      modify_dockerfile:
-        description: "Modify the Dockerfile before building the image"
-        default: false
-        required: false
-        type: boolean
       push:
         description: "Push the image to the registries (disables artifact upload)"
         default: false
@@ -74,12 +69,6 @@ jobs:
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@8c0edbc76e98fa90f69d9a2c020dcb50019dc325
-
-      - name: Modify Dockerfile
-        if: inputs.modify_dockerfile == true
-        run: |
-          sed --in-place 's/^FROM /FROM --platform=$TARGETPLATFORM /g' \
-          ${{ inputs.docker_file }}
 
       - name: Docker credentials available for push
         if: inputs.push == true

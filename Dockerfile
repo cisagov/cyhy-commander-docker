@@ -17,7 +17,6 @@ RUN pip install git+https://github.com/cisagov/cyhy-commander@v${CYHY_COMMANDER_
 FROM python:${PYTHON_IMAGE_VERSION}-slim as final-stage
 
 ARG CYHY_UID=421
-ARG TARGETPLATFORM
 ARG VERSION
 
 LABEL org.opencontainers.image.authors="mark.feldhousen@cisa.dhs.gov"
