@@ -33,6 +33,11 @@ on:
         default: false
         required: false
         type: boolean
+      tag_postfix:
+        description: "Postfix to append to the image tags"
+        default: ""
+        required: false
+        type: string
     secrets:
       artifact_key:
         description: "Enables encryption of the image archive if specified"
@@ -106,6 +111,14 @@ jobs:
         if: inputs.push != true
         run: mkdir -p ${{ env.ARTIFACT_WORK_DIR }}
 
+      - name: Add postfix to image tags
+        id: tag_postfix
+        run: |
+          # Replace illegal characters in tag postfix
+          clean_postfix=${{ inputs.tag_postfix }}" | sed -e 's/[^a-zA-Z0-9._-]/_/g'
+          # Add tag postfix to new-line delimited image tags
+          echo "tags=$(echo ${{ inputs.image_tags }} | sed -e "s/$/-${clean_postfix}/")" >> $GITHUB_OUTPUT
+
       - name: Build image for push
         if: inputs.push == true
         uses: docker/build-push-action@c56af957549030174b10d6867f20e78cfd7debc5
@@ -118,7 +131,7 @@ jobs:
           labels: ${{ inputs.image_labels }}
           platforms: ${{ inputs.platforms }}
           push: true
-          tags: ${{ inputs.image_tags }}
+          tags: ${{ steps.tag_postfix.outputs.tags }}
 
       - name: Build image for archive
         if: inputs.push != true
