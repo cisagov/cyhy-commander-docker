@@ -88,13 +88,15 @@ jobs:
       matrix:
         platform: ${{ fromJson(needs.config.outputs.platforms_json) }}
     name: "${{ matrix.platform }}"
+    permissions:
+      packages: write
     uses: ./.github/workflows/_build-image.yml
     with:
       image_labels: ${{ needs.metadata.outputs.image_labels }}
       image_tags: ${{ needs.metadata.outputs.image_tags }}
       platforms: ${{ matrix.platform }}
-      # TODO: Disable push and remove Docker credentials when issue resolved:
-      # https://github.com/moby/buildkit/issues/2887
+      # TODO: Disable push, remove Docker credentials, and packages: write
+      # when issue resolved: https://github.com/moby/buildkit/issues/2887
       push: true
       tag_postfix: ${{ matrix.platform }}
     secrets:
