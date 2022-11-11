@@ -149,7 +149,7 @@ jobs:
           outputs: type=docker,dest=${{ env.ARTIFACT_WORK_DIR }}/image.tar
           platforms: ${{ inputs.platforms }}
           push: false
-          tags: ${{ inputs.image_tags }}
+          tags: ${{ steps.tag_postfix.outputs.tags }}
 
       - name: Check if artifact key is available
         id: check_artifact_key
