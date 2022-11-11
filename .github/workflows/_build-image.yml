@@ -115,9 +115,12 @@ jobs:
         id: tag_postfix
         run: |
           # Replace illegal characters in tag postfix
-          clean_postfix=${{ inputs.tag_postfix }}" | sed -e 's/[^a-zA-Z0-9._-]/_/g'
+          clean_postfix=$(echo "${{ inputs.tag_postfix }}" | sed -e 's/[^a-zA-Z0-9._-]/_/g')
           # Add tag postfix to new-line delimited image tags
-          echo "tags=$(echo ${{ inputs.image_tags }} | sed -e "s/$/-${clean_postfix}/")" >> $GITHUB_OUTPUT
+          delimiter="$(openssl rand -hex 8)"
+          echo "tags<<${delimiter}" >> $GITHUB_OUTPUT
+          echo "${{ inputs.image_tags }}" | sed -e "s/$/-${clean_postfix}/" >> $GITHUB_OUTPUT
+          echo "${delimiter}" >> $GITHUB_OUTPUT
 
       - name: Build image for push
         if: inputs.push == true
