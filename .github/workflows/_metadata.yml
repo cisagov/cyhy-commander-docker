@@ -21,17 +21,6 @@ on:
 
 jobs:
   metadata:
-    # Calculates and publishes outputs that are used by other jobs.
-    #
-    # Outputs:
-    #   source_version:
-    #     The source version as reported by the `bump_version.sh show` command.
-    #   labels:
-    #     A list of image labels to apply to the image.
-    #   tags:
-    #     A comma separated list of Docker tags to be applied to the image. For
-    #     more information about these tags, see the metadata-action
-    #     documentation: https://github.com/docker/metadata-action#outputs
     name: "Calculate variables"
     runs-on: ubuntu-latest
     outputs:
@@ -46,10 +35,12 @@ jobs:
           # TODO: change to 'egress-policy: block' after couple of runs
           egress-policy: audit
       - uses: actions/checkout@93ea575cb5d8a053eaa0ac8fa3b40d7e05a33cc8
+
       - name: Calculate values from source
         id: source_values
         run: |
           echo "source_version=$(./bump_version.sh show)" >> $GITHUB_OUTPUT
+
       - name: Calculate Docker metadata
         id: docker_meta
         uses: docker/metadata-action@57396166ad8aefe6098280995947635806a0e6ea
