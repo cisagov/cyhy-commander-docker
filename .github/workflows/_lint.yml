@@ -4,10 +4,6 @@ name: lint
 on:
   workflow_call:
     inputs:
-      buildx_cache_dir:
-        default: ~/.cache/buildx
-        required: false
-        type: string
       curl_cache_dir:
         default: ~/.cache/curl
         required: false
