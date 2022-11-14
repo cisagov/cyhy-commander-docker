@@ -1,3 +1,5 @@
+# syntax=docker/dockerfile:1
+
 ARG CYHY_COMMANDER_VERSION=0.0.3-rc2
 ARG PYTHON_IMAGE_VERSION=2.7.18
 ARG VERSION
@@ -8,11 +10,18 @@ ARG CYHY_COMMANDER_VERSION
 ENV PATH="/opt/venv/bin:$PATH"
 
 WORKDIR /root
-RUN apt-get update
-RUN python -m pip install --upgrade pip
-RUN pip install --upgrade virtualenv
-RUN virtualenv /opt/venv
-RUN pip install git+https://github.com/cisagov/cyhy-commander@v${CYHY_COMMANDER_VERSION}
+RUN \
+  --mount=type=cache,mode=0777,target=/var/cache/apt \
+  --mount=type=cache,mode=0777,target=/root/.cache/pip <<EOF
+apt-get update
+python -m pip install --upgrade pip
+pip install --upgrade virtualenv
+virtualenv /opt/venv
+EOF
+
+RUN --mount=type=cache,mode=0777,target=/root/.cache/pip \
+  pip install https://github.com/cisagov/cyhy-commander/archive/v${CYHY_COMMANDER_VERSION}.zip
+
 
 FROM python:${PYTHON_IMAGE_VERSION}-slim as final-stage
 
@@ -26,14 +35,16 @@ ENV CYHY_HOME="/home/cyhy"
 ENV CYHY_COMMANDER_VERSION=${CYHY_COMMANDER_VERSION}
 ENV PATH="/opt/venv/bin:$PATH"
 
-RUN groupadd --gid ${CYHY_UID} cyhy && \
-  useradd --uid ${CYHY_UID} \
+RUN <<EOF
+groupadd --gid ${CYHY_UID} cyhy
+useradd --uid ${CYHY_UID} \
   --gid cyhy \
   --shell /bin/bash \
-  --create-home cyhy && \
-  mkdir -p /etc/cyhy/ && \
-  ln -snf /data/commander.conf /etc/cyhy/commander.conf && \
-  echo ${VERSION} > image_version.txt
+  --create-home cyhy
+mkdir -p /etc/cyhy/
+ln -snf /data/commander.conf /etc/cyhy/commander.conf
+echo ${VERSION} > image_version.txt
+EOF
 
 WORKDIR ${CYHY_HOME}
 COPY \
