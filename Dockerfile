@@ -26,8 +26,6 @@ ENV CYHY_HOME="/home/cyhy"
 ENV CYHY_COMMANDER_VERSION=${CYHY_COMMANDER_VERSION}
 ENV PATH="/opt/venv/bin:$PATH"
 
-COPY --from=build-stage /opt/venv /opt/venv
-
 RUN groupadd --gid ${CYHY_UID} cyhy && \
   useradd --uid ${CYHY_UID} \
   --gid cyhy \
@@ -43,6 +41,7 @@ COPY \
   src/entrypoint.sh \
   src/launcher.sh \
   ./
+COPY --from=build-stage /opt/venv /opt/venv
 
 VOLUME ["/data"]
 
