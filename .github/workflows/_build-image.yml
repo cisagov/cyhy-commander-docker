@@ -119,7 +119,12 @@ jobs:
           # Add tag postfix to new-line delimited image tags
           delimiter="$(openssl rand -hex 8)"
           echo "tags<<${delimiter}" >> $GITHUB_OUTPUT
-          echo "${{ inputs.image_tags }}" | sed -e "s/$/-${clean_postfix}/" >> $GITHUB_OUTPUT
+          # if tag_postfix is set, append it to each tag
+          if [[ -n "${{ inputs.tag_postfix }}" ]]; then
+            echo "${{ inputs.image_tags }}" | sed -e "s/$/-${clean_postfix}/" >> $GITHUB_OUTPUT
+          else
+            echo "${{ inputs.image_tags }}" >> $GITHUB_OUTPUT
+          fi
           echo "${delimiter}" >> $GITHUB_OUTPUT
 
       - name: Build image for push
