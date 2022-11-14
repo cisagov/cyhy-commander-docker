@@ -1,6 +1,5 @@
 ---
-
-name: config
+name: "Config"
 
 on:
   workflow_call:

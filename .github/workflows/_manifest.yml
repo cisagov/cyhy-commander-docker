@@ -1,6 +1,5 @@
 ---
-
-name: Create manifests
+name: "Create manifests"
 
 on:
   workflow_call:

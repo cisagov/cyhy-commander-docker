@@ -1,6 +1,5 @@
 ---
-
-name: Labels
+name: "Labels"
 
 on:
   push:

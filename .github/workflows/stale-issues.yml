@@ -1,5 +1,5 @@
 ---
-name: Label and close stale issues
+name: "Label and close stale issues"
 
 on:
   schedule:

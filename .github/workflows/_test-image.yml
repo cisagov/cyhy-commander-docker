@@ -1,5 +1,5 @@
 ---
-name: Test Docker image
+name: "Test Docker image"
 
 on:
   workflow_call:

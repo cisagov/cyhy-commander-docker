@@ -1,4 +1,5 @@
 ---
+name: "Publish README"
 
 on:
   workflow_call:
