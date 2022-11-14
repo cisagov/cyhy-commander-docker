@@ -95,8 +95,6 @@ jobs:
       image_labels: ${{ needs.metadata.outputs.image_labels }}
       image_tags: ${{ needs.metadata.outputs.image_tags }}
       platforms: ${{ matrix.platform }}
-      # TODO: Disable push, remove Docker credentials, and packages: write
-      # when issue resolved: https://github.com/moby/buildkit/issues/2887
       push: true
       tag_postfix: ${{ matrix.platform }}
     secrets:
