@@ -54,10 +54,6 @@ jobs:
     name: "Lint"
     needs: [config]
     uses: ./.github/workflows/_lint.yml
-    with:
-      go_version: ${{ needs.config.outputs.go_version }}
-      python_version: ${{ needs.config.outputs.python_version }}
-      shfmt_version: ${{ needs.config.outputs.shfmt_version }}
 
   build-test-image:
     name: "Build test image"
