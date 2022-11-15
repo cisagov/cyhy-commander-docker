@@ -65,8 +65,7 @@ jobs:
             type=ref,event=branch
             type=ref,event=pr
             type=schedule,pattern=nightly
-            type=semver,pattern={{major}},enable=${{ github.event_name == 'release' }}
-            type=semver,pattern={{major}}.{{minor}},enable=${{ github.event_name == 'release' }}
+            type=semver,pattern={{major}},enable=${{ github.event_name == 'release' && !github.event.release.prerelease }}
+            type=semver,pattern={{major}}.{{minor}},enable=${{ github.event_name == 'release' && !github.event.release.prerelease }}
             type=semver,pattern={{version}},enable=${{ github.event_name == 'release' }}
             type=sha
-# TODO: fix semvers on pre-releases
