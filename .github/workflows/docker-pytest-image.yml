@@ -1,6 +1,11 @@
 ---
 name: "Test Docker image"
 
+# This reusable workflow tests a Docker image using pytest.  The image is loaded
+# from the artifacts of a previous workflow.  If image decryption keys are
+# presented, the image is decrypted before loading.  If data encryption keys are
+# presented, the test results are encrypted before uploading as an artifact.
+
 on:
   workflow_call:
     inputs:

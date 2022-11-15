@@ -1,12 +1,20 @@
 ---
 name: "Create manifests"
 
+# This reusable workflow creates Docker manifests.  It is useful for combining
+# multiple images into a single multi-platform manifest.  The resulting manifest
+# will be pushed to the Docker Hub and GitHub Container Registry.
+
 on:
   workflow_call:
     inputs:
       # Required inputs
+      image_labels:
+        description: "Image labels to apply to the manifest"
+        required: true
+        type: string
       image_tags:
-        description: "The tags to apply to include in the manifest"
+        description: "The tags to include in the manifest"
         required: true
         type: string
       platforms:
@@ -79,3 +87,5 @@ jobs:
             docker manifest push "${image_tag}"
             echo "::endgroup::"
           done
+
+        # TODO: add a step to remove the platform-specific images from registry

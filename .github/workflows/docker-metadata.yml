@@ -1,6 +1,9 @@
 ---
 name: "Calculate Docker metadata"
 
+# This reusable workflow calculates the labels and tags for a Docker image.
+# These tags will vary depending on the event that triggered the workflow.
+
 on:
   workflow_call:
     inputs:
@@ -58,7 +61,7 @@ jobs:
             type=raw,value=latest,enable=${{ github.event_name == 'release' && !github.event.release.prerelease }}
             type=raw,value=prerelease,enable=${{ github.event_name == 'release' && github.event.release.prerelease }}
             type=raw,value=release,enable=${{ github.event_name == 'release' && !github.event.release.prerelease }}
-            type=raw,event=workflow_dispatch,value=${{ github.event.inputs.dispatch-tag}}
+            type=raw,event=workflow_dispatch,value=${{ github.event.inputs.dispatch-tag }}
             type=ref,event=branch
             type=ref,event=pr
             type=schedule,pattern=nightly
@@ -66,3 +69,4 @@ jobs:
             type=semver,pattern={{major}}.{{minor}},enable=${{ github.event_name == 'release' }}
             type=semver,pattern={{version}},enable=${{ github.event_name == 'release' }}
             type=sha
+# TODO: fix semvers on pre-releases

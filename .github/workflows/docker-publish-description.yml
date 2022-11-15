@@ -1,6 +1,9 @@
 ---
 name: "Publish README"
 
+# This reusable workflow publishes the description of a Docker image to the
+# Docker Hub.
+
 on:
   workflow_call:
     inputs:
