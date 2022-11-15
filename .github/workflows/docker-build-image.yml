@@ -1,6 +1,17 @@
 ---
 name: "Build image"
 
+# This reusable workflow builds Docker images.  It allows images to be pushed to
+# the Docker Hub and GitHub Container Registry, or uploaded as an artifact for
+# later use by other workflows.
+#
+# Additional workflow features include:
+# - Caching of Docker layers to Github Actions cache
+# - Optional encryption of Docker images stored as artifacts
+# - Ability to postfix tags with additional information. For example, adding the
+#   platform identifier so the image can be later included in a multi-platform
+#   manifest.
+
 on:
   workflow_call:
     inputs:
@@ -15,8 +26,8 @@ on:
         required: false
         type: string
       docker_file:
-        description: "The Dockerfile to use"
         default: ./Dockerfile
+        description: "The Dockerfile to use"
         required: false
         type: string
       image_labels:
@@ -24,18 +35,18 @@ on:
         required: false
         type: string
       image_tags:
-        description: "The tags to apply to the image"
         default: local/test-image:latest
+        description: "The tags to apply to the image"
         required: false
         type: string
       push:
-        description: "Push the image to the registries (disables artifact upload)"
         default: false
+        description: "Push the image to the registries (disables artifact upload)"
         required: false
         type: boolean
       tag_postfix:
-        description: "Postfix to append to the image tags"
         default: ""
+        description: "Postfix to append to the image tags"
         required: false
         type: string
     secrets:

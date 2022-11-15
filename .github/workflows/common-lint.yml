@@ -1,31 +1,40 @@
 ---
 name: "Lint"
 
+# This reusable workflow runs the configure pre-commit hooks on the repository.
+# It handles of the caching and the installation of the hooks.
+
 on:
   workflow_call:
     inputs:
       curl_cache_dir:
         default: ~/.cache/curl
+        description: "The directory to use for caching curl downloads."
         required: false
         type: string
       pip_cache_dir:
         default: ~/.cache/pip
+        description: "The directory to use for caching pip downloads."
         required: false
         type: string
       pre_commit_cache_dir:
         default: ~/.cache/pre-commit
+        description: "The directory to use for caching pre-commit downloads."
         required: false
         type: string
       go_version:
         default: '1.19'
+        description: "The version of Go to use."
         required: false
         type: string
       python_version:
         default: '3.10'
+        description: "The version of Python to use."
         required: false
         type: string
       shfmt_version:
         default: 'v3.5.1'
+        description: "The version of shfmt (shell format) to use."
         required: false
         type: string
 

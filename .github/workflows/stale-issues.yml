@@ -31,5 +31,5 @@ jobs:
           close-issue-message: >-
             This issue has been automatically closed due to inactivity. If you are
             still experiencing problems, please open a new issue.
-          stale-issue-label: "stale :skull:"
-          only-labels: "needs more info :thinking:"
+          stale-issue-label: "stale"
+          only-labels: "need info"

@@ -29,7 +29,7 @@ jobs:
   metadata:
     name: "Metadata"
     needs: [config]
-    uses: ./.github/workflows/_metadata.yml
+    uses: ./.github/workflows/docker-metadata.yml
     with:
       image_name: ${{ needs.config.outputs.image_name }}
 
@@ -53,12 +53,12 @@ jobs:
   lint:
     name: "Lint"
     needs: [config]
-    uses: ./.github/workflows/_lint.yml
+    uses: ./.github/workflows/common-lint.yml
 
   build-test-image:
     name: "Build test image"
     needs: [config, lint, metadata]
-    uses: ./.github/workflows/_build-image.yml
+    uses: ./.github/workflows/docker-build-image.yml
     with:
       artifact_name: ${{ needs.config.outputs.test_image_artifact_name }}
       image_labels: ${{ needs.metadata.outputs.image_labels }}
@@ -70,7 +70,7 @@ jobs:
   test-image:
     name: "Test image"
     needs: [build-test-image, config]
-    uses: ./.github/workflows/_test-image.yml
+    uses: ./.github/workflows/docker-pytest-image.yml
     with:
       data_artifact_name: ${{ needs.config.outputs.data_artifact_name }}
       data_artifact_path: ${{ needs.config.outputs.data_artifact_path }}
@@ -85,7 +85,7 @@ jobs:
     name: "${{ matrix.platform }}"
     permissions:
       packages: write
-    uses: ./.github/workflows/_build-image.yml
+    uses: ./.github/workflows/docker-build-image.yml
     with:
       image_labels: ${{ needs.metadata.outputs.image_labels }}
       image_tags: ${{ needs.metadata.outputs.image_tags }}
@@ -104,7 +104,7 @@ jobs:
     name: "Build multi-platform manifest"
     permissions:
       packages: write
-    uses: ./.github/workflows/_manifest.yml
+    uses: ./.github/workflows/docker-manifest.yml
     with:
       image_tags: ${{ needs.metadata.outputs.image_tags }}
       platforms: ${{ needs.config.outputs.platforms }}
@@ -116,7 +116,7 @@ jobs:
     needs: [build-multi-platform-manifest, docker-secrets]
     if: github.event_name == 'release' && !github.event.release.prerelease
     name: "Publish docs"
-    uses: ./.github/workflows/_publish-readme.yml
+    uses: ./.github/workflows/docker-publish-description.yml
     with:
       image_name: ${{ needs.config.outputs.image_name }}
     secrets:
