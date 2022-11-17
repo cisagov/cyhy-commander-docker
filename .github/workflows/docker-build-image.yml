@@ -145,8 +145,8 @@ jobs:
             # if the tag_suffix is set, use the cleaned version as the cache scope
             echo "scope=${{ steps.clean.outputs.suffix }}" >> $GITHUB_OUTPUT
           else
-            # if the tag_suffix is unset, use the branch name as the cache scope
-            echo "scope=${{ github.ref_name }}" >> $GITHUB_OUTPUT
+            # if the tag_suffix is use the default cache scope
+            echo "scope=buildkit" >> $GITHUB_OUTPUT
           fi
 
       - name: Build image for push
