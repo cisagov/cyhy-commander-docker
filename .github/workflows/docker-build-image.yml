@@ -46,7 +46,7 @@ on:
         type: boolean
       tag_suffix:
         default: ""
-        description: "Suffix to append to the image tags"
+        description: "Suffix to append to the image tags and cache scope"
         required: false
         type: string
     secrets:
@@ -122,29 +122,43 @@ jobs:
         if: inputs.push != true
         run: mkdir -p ${{ env.ARTIFACT_WORK_DIR }}
 
+      - name: Clean variables
+        id: clean
+        run: |
+          # Replace illegal characters in tag suffix
+          echo suffix=$(echo "${{ inputs.tag_suffix }}" | sed -e 's/[^a-zA-Z0-9._-]/_/g') >> $GITHUB_OUTPUT
+
       - name: Add suffix to image tags
         id: tag_suffix
         run: |
-          # Replace illegal characters in tag suffix
-          clean_suffix=$(echo "${{ inputs.tag_suffix }}" | sed -e 's/[^a-zA-Z0-9._-]/_/g')
-          # Add tag suffix to new-line delimited image tags
           delimiter="$(openssl rand -hex 8)"
           echo "tags<<${delimiter}" >> $GITHUB_OUTPUT
           # if tag_suffix is set, append it to each tag
           if [[ -n "${{ inputs.tag_suffix }}" ]]; then
-            echo "${{ inputs.image_tags }}" | sed -e "s/$/-${clean_suffix}/" >> $GITHUB_OUTPUT
+            echo "${{ inputs.image_tags }}" | sed -e "s/$/-${{ steps.clean.outputs.suffix }}/" >> $GITHUB_OUTPUT
           else
             echo "${{ inputs.image_tags }}" >> $GITHUB_OUTPUT
           fi
           echo "${delimiter}" >> $GITHUB_OUTPUT
+
+      - name: Calculate cache scope
+        id: cache
+        run: |
+          if [[ -n "${{ inputs.tag_suffix }}" ]]; then
+            # if the tag_suffix is set, use the cleaned version as the cache scope
+            echo "scope=${{ steps.clean.outputs.suffix }}" >> $GITHUB_OUTPUT
+          else
+            # if the tag_suffix is unset, use the branch name as the cache scope
+            echo "scope=${{ github.ref_name }}" >> $GITHUB_OUTPUT
+          fi
 
       - name: Build image for push
         if: inputs.push == true
         uses: docker/build-push-action@c56af957549030174b10d6867f20e78cfd7debc5
         with:
           build-args: ${{ secrets.build_args }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          cache-from: type=gha,scope=${{ steps.cache.outputs.scope }}
+          cache-to: type=gha,mode=max,scope=${{ steps.cache.outputs.scope }}
           context: .
           file: ${{ inputs.docker_file}}
           labels: ${{ inputs.image_labels }}
@@ -157,8 +171,8 @@ jobs:
         uses: docker/build-push-action@c56af957549030174b10d6867f20e78cfd7debc5
         with:
           build-args: ${{ secrets.build_args }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          cache-from: type=gha,scope=${{ steps.cache.outputs.scope }}
+          cache-to: type=gha,mode=max,scope=${{ steps.cache.outputs.scope }}
           context: .
           file: ${{ inputs.docker_file}}
           labels: ${{ inputs.image_labels }}
