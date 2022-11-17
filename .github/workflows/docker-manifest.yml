@@ -9,10 +9,6 @@ on:
   workflow_call:
     inputs:
       # Required inputs
-      image_labels:
-        description: "Image labels to apply to the manifest"
-        required: true
-        type: string
       image_tags:
         description: "The tags to include in the manifest"
         required: true
