@@ -18,7 +18,7 @@ on:
         required: true
         type: string
       platforms:
-        description: "The platform(s) to postfix to each image tag (CSV)"
+        description: "The platform(s) to suffix to each image tag (CSV)"
         required: true
         type: string
     secrets:
@@ -77,10 +77,10 @@ jobs:
             # loop through each platform
             for platform in $(echo ${{ inputs.platforms }} | tr "," " "); do
               # replace illegal characters in platform name
-              clean_postfix=$(echo "${platform}" | sed -e 's/[^a-zA-Z0-9._-]/_/g')
+              clean_suffix=$(echo "${platform}" | sed -e 's/[^a-zA-Z0-9._-]/_/g')
               # create the manifest by amending each platform image tag
-              echo "Amending ${image_tag}-${clean_postfix} to ${image_tag}"
-              docker manifest create --amend "${image_tag}" "${image_tag}-${clean_postfix}"
+              echo "Amending ${image_tag}-${clean_suffix} to ${image_tag}"
+              docker manifest create --amend "${image_tag}" "${image_tag}-${clean_suffix}"
             done
             # push the completed multi-platform manifest
             echo "Pushing manifest ${image_tag}"

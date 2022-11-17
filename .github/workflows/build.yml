@@ -105,7 +105,7 @@ jobs:
       image_tags: ${{ needs.metadata.outputs.image_tags }}
       platforms: ${{ matrix.platform }}
       push: true
-      tag_postfix: ${{ matrix.platform }}
+      tag_suffix: ${{ matrix.platform }}
     secrets:
       build_args: |
         VERSION=${{ needs.metadata.outputs.source_version }}

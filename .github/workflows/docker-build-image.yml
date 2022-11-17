@@ -8,7 +8,7 @@ name: "Build image"
 # Additional workflow features include:
 # - Caching of Docker layers to Github Actions cache
 # - Optional encryption of Docker images stored as artifacts
-# - Ability to postfix tags with additional information. For example, adding the
+# - Ability to suffix tags with additional information. For example, adding the
 #   platform identifier so the image can be later included in a multi-platform
 #   manifest.
 
@@ -44,9 +44,9 @@ on:
         description: "Push the image to the registries (disables artifact upload)"
         required: false
         type: boolean
-      tag_postfix:
+      tag_suffix:
         default: ""
-        description: "Postfix to append to the image tags"
+        description: "Suffix to append to the image tags"
         required: false
         type: string
     secrets:
@@ -122,17 +122,17 @@ jobs:
         if: inputs.push != true
         run: mkdir -p ${{ env.ARTIFACT_WORK_DIR }}
 
-      - name: Add postfix to image tags
-        id: tag_postfix
+      - name: Add suffix to image tags
+        id: tag_suffix
         run: |
-          # Replace illegal characters in tag postfix
-          clean_postfix=$(echo "${{ inputs.tag_postfix }}" | sed -e 's/[^a-zA-Z0-9._-]/_/g')
-          # Add tag postfix to new-line delimited image tags
+          # Replace illegal characters in tag suffix
+          clean_suffix=$(echo "${{ inputs.tag_suffix }}" | sed -e 's/[^a-zA-Z0-9._-]/_/g')
+          # Add tag suffix to new-line delimited image tags
           delimiter="$(openssl rand -hex 8)"
           echo "tags<<${delimiter}" >> $GITHUB_OUTPUT
-          # if tag_postfix is set, append it to each tag
-          if [[ -n "${{ inputs.tag_postfix }}" ]]; then
-            echo "${{ inputs.image_tags }}" | sed -e "s/$/-${clean_postfix}/" >> $GITHUB_OUTPUT
+          # if tag_suffix is set, append it to each tag
+          if [[ -n "${{ inputs.tag_suffix }}" ]]; then
+            echo "${{ inputs.image_tags }}" | sed -e "s/$/-${clean_suffix}/" >> $GITHUB_OUTPUT
           else
             echo "${{ inputs.image_tags }}" >> $GITHUB_OUTPUT
           fi
@@ -150,7 +150,7 @@ jobs:
           labels: ${{ inputs.image_labels }}
           platforms: ${{ inputs.platforms }}
           push: true
-          tags: ${{ steps.tag_postfix.outputs.tags }}
+          tags: ${{ steps.tag_suffix.outputs.tags }}
 
       - name: Build image for archive
         if: inputs.push != true
@@ -165,7 +165,7 @@ jobs:
           outputs: type=docker,dest=${{ env.ARTIFACT_WORK_DIR }}/image.tar
           platforms: ${{ inputs.platforms }}
           push: false
-          tags: ${{ steps.tag_postfix.outputs.tags }}
+          tags: ${{ steps.tag_suffix.outputs.tags }}
 
       - name: Check if artifact key is available
         id: check_artifact_key
