@@ -44,6 +44,15 @@ on:
         description: "The tags to apply to the image"
         required: false
         type: string
+      image_tarball_name:
+        default: image.tar
+        description: "The name of the image tarball (name will be cleaned)"
+        required: false
+        type: string
+      preload_artifact_name:
+        description: "Preload images from tarballs in the specified artifact"
+        required: false
+        type: string
       push:
         default: false
         description: "Push the image to the registries (disables artifact upload)"
@@ -51,7 +60,7 @@ on:
         type: boolean
       tag_suffix:
         default: ""
-        description: "Suffix to append to the image tags and cache scope"
+        description: "Suffix to append to the image tags and cache scope (name will be cleaned)"
         required: false
         type: string
     secrets:
@@ -67,9 +76,13 @@ on:
       docker_username:
         description: "The username for the Docker hub account (required for push)"
         required: false
+      preload_artifact_key:
+        description: "Enables decryption of the preload artifact image tarballs if specified"
+        required: false
 
 env:
-  ARTIFACT_WORK_DIR: /tmp/artifact-work
+  OUTPUT_ARTIFACT_WORK_DIR: /tmp/output-artifact-work
+  PRELOAD_ARTIFACT_WORK_DIR: /tmp/preload-artifact-work
 
 jobs:
   build-image:
@@ -120,15 +133,18 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Create directory for image archive storage
-        if: inputs.push != true
-        run: mkdir -p ${{ env.ARTIFACT_WORK_DIR }}
+      - name: Create directories for artifact work
+        run: |
+          mkdir -p ${{ env.OUTPUT_ARTIFACT_WORK_DIR }}
+          mkdir -p ${{ env.PRELOAD_ARTIFACT_WORK_DIR }}
 
       - name: Clean variables
         id: clean
         run: |
           # Replace illegal characters in tag suffix
           echo suffix=$(echo "${{ inputs.tag_suffix }}" | sed -e 's/[^a-zA-Z0-9._-]/_/g') >> $GITHUB_OUTPUT
+          # Replace illegal characters in image tarball name
+          echo image_tarball_name=$(echo "${{ inputs.image_tarball_name }}" | sed -e 's/[^a-zA-Z0-9._-]/_/g') >> $GITHUB_OUTPUT
 
       - name: Add suffix to image tags
         id: tag_suffix
@@ -154,6 +170,29 @@ jobs:
             echo "scope=buildkit" >> $GITHUB_OUTPUT
           fi
 
+      - name: Download image artifact tarballs for preload
+        if: inputs.preload_artifact_name != ''
+        uses: actions/download-artifact@9782bd6a9848b53b110e712e20e42d89988822b7
+        with:
+          name: ${{ inputs.image_artifact_name }}
+          path: ${{ env.PRELOAD_ARTIFACT_WORK_DIR }}
+
+      - name: Load unencrypted images
+        if: ${{ inputs.preload_artifact_name != '' && secrets.preload_artifact_key == '' }}
+        run: |
+          for tarball in ${{ env.PRELOAD_ARTIFACT_WORK_DIR }}/*.tar; do
+            echo "Loading ${tarball}"
+            docker load -i "${tarball}"
+          done
+
+      - name: Load encrypted image
+        if: ${{ inputs.preload_artifact_name != '' && secrets.preload_artifact_key != '' }}
+        run: |
+          for tarball in ${{ env.PRELOAD_ARTIFACT_WORK_DIR }}/*.tar.7z; do
+            echo "Loading ${tarball}"
+            7za x -p${{ secrets.preload_artifact_key }} -so "${tarball}" | docker load
+          done
+
       - name: Build image for push
         if: inputs.push == true
         uses: docker/build-push-action@c56af957549030174b10d6867f20e78cfd7debc5
@@ -178,7 +217,7 @@ jobs:
           context: .
           file: ${{ inputs.docker_file}}
           labels: ${{ inputs.image_labels }}
-          outputs: type=docker,dest=${{ env.ARTIFACT_WORK_DIR }}/image.tar
+          outputs: type=docker,dest=${{ env.OUTPUT_ARTIFACT_WORK_DIR }}/${{ steps.clean.outputs.image_tarball_name }}.tar
           platforms: ${{ inputs.platforms }}
           push: false
           tags: ${{ steps.tag_suffix.outputs.tags }}
@@ -189,23 +228,23 @@ jobs:
         run: |
           if [ -n "${{ secrets.artifact_key }}" ]; then
             echo "do_encryption=true" >> $GITHUB_OUTPUT
-            echo "file_name=image.tar.7z" >> $GITHUB_OUTPUT
+            echo "file_name=${{ steps.clean.outputs.image_tarball_name }}.7z" >> $GITHUB_OUTPUT
           else
             echo "do_encryption=false" >> $GITHUB_OUTPUT
-            echo "file_name=image.tar" >> $GITHUB_OUTPUT
+            echo "file_name=${{ steps.clean.outputs.image_tarball_name }}" >> $GITHUB_OUTPUT
           fi
 
       - name: Encrypt image archive
         if: ${{ (inputs.push == false) && (steps.check_artifact_key.outputs.do_encryption == 'true') }}
         run: |
           7za a -p${{ secrets.artifact_key }} \
-          ${{ env.ARTIFACT_WORK_DIR }}/image.tar.7z \
-          ${{ env.ARTIFACT_WORK_DIR }}/image.tar
+          ${{ env.OUTPUT_ARTIFACT_WORK_DIR }}/${{ steps.clean.outputs.image_tarball_name }}.7z \
+          ${{ env.OUTPUT_ARTIFACT_WORK_DIR }}/${{ steps.clean.outputs.image_tarball_name }}
 
       - name: Upload artifacts
         if: ${{ (inputs.push == false) && (inputs.artifact_name != '') }}
         uses: actions/upload-artifact@83fd05a356d7e2593de66fc9913b3002723633cb
         with:
           name: ${{ inputs.artifact_name }}
-          path: ${{ env.ARTIFACT_WORK_DIR }}/${{ steps.check_artifact_key.outputs.file_name }}
+          path: ${{ env.OUTPUT_ARTIFACT_WORK_DIR }}/${{ steps.check_artifact_key.outputs.file_name }}
           retention-days: ${{ inputs.artifact_retention_days }}
