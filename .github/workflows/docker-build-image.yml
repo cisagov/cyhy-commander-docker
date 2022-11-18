@@ -187,7 +187,7 @@ jobs:
           path: ${{ env.PRELOAD_ARTIFACT_WORK_DIR }}
 
       - name: Load unencrypted images
-        if: ${{ inputs.preload_artifact_name != '' && steps.check_preload_artifact_key.outputs.do_decryption == 'false' }}
+        if: ${{ inputs.preload_artifact_name != '' && steps.check_preload_artifact_key.outputs.do_decryption == false }}
         run: |
           for tarball in ${{ env.PRELOAD_ARTIFACT_WORK_DIR }}/*.tar; do
             echo "Loading ${tarball}"
@@ -195,7 +195,7 @@ jobs:
           done
 
       - name: Load encrypted image
-        if: ${{ inputs.preload_artifact_name != '' && steps.check_preload_artifact_key.outputs.do_decryption == 'true' }}
+        if: ${{ inputs.preload_artifact_name != '' && steps.check_preload_artifact_key.outputs.do_decryption == true }}
         run: |
           for tarball in ${{ env.PRELOAD_ARTIFACT_WORK_DIR }}/*.tar.7z; do
             echo "Loading ${tarball}"
@@ -244,7 +244,7 @@ jobs:
           fi
 
       - name: Encrypt image archive
-        if: ${{ (inputs.push == false) && (steps.check_artifact_key.outputs.do_encryption == 'true') }}
+        if: ${{ (inputs.push == false) && (steps.check_artifact_key.outputs.do_encryption == true) }}
         run: |
           7za a -p${{ secrets.artifact_key }} \
           ${{ env.OUTPUT_ARTIFACT_WORK_DIR }}/${{ steps.clean.outputs.image_tarball_name }}.7z \
