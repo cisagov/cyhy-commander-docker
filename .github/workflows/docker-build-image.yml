@@ -179,19 +179,19 @@ jobs:
         if: inputs.preload_artifact_name != ''
         uses: actions/download-artifact@9782bd6a9848b53b110e712e20e42d89988822b7
         with:
-          name: ${{ inputs.image_artifact_name }}
+          name: ${{ inputs.preload_artifact_name }}
           path: ${{ env.PRELOAD_ARTIFACT_WORK_DIR }}
 
       - name: Load unencrypted images
-        if: ${{ inputs.preload_artifact_name != '' && steps.check_preload_artifact_key.outputs.do_decryption == false }}
+        if: ${{ inputs.preload_artifact_name != '' && steps.check_preload_artifact_key.outputs.do_decryption == 'false' }}
         run: |
           for tarball in ${{ env.PRELOAD_ARTIFACT_WORK_DIR }}/*.tar; do
             echo "Loading ${tarball}"
             docker load -i "${tarball}"
           done
 
-      - name: Load encrypted image
-        if: ${{ inputs.preload_artifact_name != '' && steps.check_preload_artifact_key.outputs.do_decryption == true }}
+      - name: Load encrypted images
+        if: ${{ inputs.preload_artifact_name != '' && steps.check_preload_artifact_key.outputs.do_decryption == 'true' }}
         run: |
           for tarball in ${{ env.PRELOAD_ARTIFACT_WORK_DIR }}/*.tar.7z; do
             echo "Loading ${tarball}"
