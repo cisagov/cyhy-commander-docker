@@ -170,6 +170,15 @@ jobs:
             echo "scope=buildkit" >> $GITHUB_OUTPUT
           fi
 
+      - name: Check if preload artifact key is available
+        id: check_preload_artifact_key
+        run: |
+          if [ -n "${{ secrets.preload_artifact_key }}" ]; then
+            echo "do_decryption=true" >> $GITHUB_OUTPUT
+          else
+            echo "do_decryption=false" >> $GITHUB_OUTPUT
+          fi
+
       - name: Download image artifact tarballs for preload
         if: inputs.preload_artifact_name != ''
         uses: actions/download-artifact@9782bd6a9848b53b110e712e20e42d89988822b7
@@ -178,7 +187,7 @@ jobs:
           path: ${{ env.PRELOAD_ARTIFACT_WORK_DIR }}
 
       - name: Load unencrypted images
-        if: ${{ inputs.preload_artifact_name != '' && secrets.preload_artifact_key == '' }}
+        if: ${{ inputs.preload_artifact_name != '' && steps.check_preload_artifact_key.outputs.do_decryption == 'false' }}
         run: |
           for tarball in ${{ env.PRELOAD_ARTIFACT_WORK_DIR }}/*.tar; do
             echo "Loading ${tarball}"
@@ -186,7 +195,7 @@ jobs:
           done
 
       - name: Load encrypted image
-        if: ${{ inputs.preload_artifact_name != '' && secrets.preload_artifact_key != '' }}
+        if: ${{ inputs.preload_artifact_name != '' && steps.check_preload_artifact_key.outputs.do_decryption == 'true' }}
         run: |
           for tarball in ${{ env.PRELOAD_ARTIFACT_WORK_DIR }}/*.tar.7z; do
             echo "Loading ${tarball}"
