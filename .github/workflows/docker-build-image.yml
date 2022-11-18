@@ -226,7 +226,7 @@ jobs:
           context: .
           file: ${{ inputs.docker_file}}
           labels: ${{ inputs.image_labels }}
-          outputs: type=docker,dest=${{ env.OUTPUT_ARTIFACT_WORK_DIR }}/${{ steps.clean.outputs.image_tarball_name }}.tar
+          outputs: type=docker,dest=${{ env.OUTPUT_ARTIFACT_WORK_DIR }}/${{ steps.clean.outputs.image_tarball_name }}
           platforms: ${{ inputs.platforms }}
           push: false
           tags: ${{ steps.tag_suffix.outputs.tags }}
