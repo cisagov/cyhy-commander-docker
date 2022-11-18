@@ -25,6 +25,11 @@ on:
         description: "Upload the image archive as an artifact if specified"
         required: false
         type: string
+      artifact_retention_days:
+        default: 1
+        description: "Number of days to retain the artifact"
+        required: false
+        type: number
       docker_file:
         default: ./Dockerfile
         description: "The Dockerfile to use"
@@ -203,3 +208,4 @@ jobs:
         with:
           name: ${{ inputs.artifact_name }}
           path: ${{ env.ARTIFACT_WORK_DIR }}/${{ steps.check_artifact_key.outputs.file_name }}
+          retention-days: ${{ inputs.artifact_retention_days }}

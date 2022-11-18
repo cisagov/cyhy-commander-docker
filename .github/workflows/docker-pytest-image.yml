@@ -24,6 +24,11 @@ on:
         default: data
         required: false
         type: string
+      data_artifact_retention_days:
+        default: 1
+        description: "Number of days to retain the test data artifact"
+        required: false
+        type: number
       pip_cache_dir:
         description: "The pip cache directory"
         default: ~/.cache/pip
@@ -147,6 +152,7 @@ jobs:
         with:
           name: ${{ inputs.data_artifact_name }}
           path: data.tar.gz
+          retention-days: ${{ inputs.data_artifact_retention_days }}
 
       - name: Upload encrypted data artifacts
         if: steps.check_data_artifact_key.outputs.do_encryption == 'true'
@@ -154,3 +160,4 @@ jobs:
         with:
           name: ${{ inputs.data_artifact_name }}
           path: data.tar.7z
+          retention-days: ${{ inputs.data_artifact_retention_days }}
