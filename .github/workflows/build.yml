@@ -68,6 +68,7 @@ jobs:
     uses: ./.github/workflows/docker-build-image.yml
     with:
       artifact_name: ${{ needs.config.outputs.test_image_artifact_name }}
+      cache_scope: linux/amd64
       image_labels: ${{ needs.metadata.outputs.image_labels }}
       platforms: linux/amd64
     secrets:
@@ -99,6 +100,7 @@ jobs:
     uses: ./.github/workflows/docker-build-image.yml
     with:
       artifact_name: image-tarballs
+      cache_scope: ${{ matrix.platform }}
       image_labels: ${{ needs.metadata.outputs.image_labels }}
       image_tags: ${{ needs.metadata.outputs.image_tags }}
       image_tarball_name: ${{ matrix.platform }}.tar
