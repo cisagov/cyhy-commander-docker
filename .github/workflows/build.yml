@@ -88,7 +88,6 @@ jobs:
   build-each-platform:
     needs:
       - config
-      - docker-secrets
       - lint
       - metadata
       - test-image
@@ -97,42 +96,59 @@ jobs:
       matrix:
         platform: ${{ fromJson(needs.config.outputs.platforms_json) }}
     name: "${{ matrix.platform }}"
-    permissions:
-      packages: write
     uses: ./.github/workflows/docker-build-image.yml
     with:
+      artifact_name: image-tarballs
       image_labels: ${{ needs.metadata.outputs.image_labels }}
       image_tags: ${{ needs.metadata.outputs.image_tags }}
+      image_tarball_name: ${{ matrix.platform }}.tar
       platforms: ${{ matrix.platform }}
-      push: true
-      tag_suffix: ${{ matrix.platform }}
     secrets:
       build_args: |
         VERSION=${{ needs.metadata.outputs.source_version }}
-      docker_password: ${{ secrets.DOCKER_PASSWORD }}
-      docker_username: ${{ secrets.DOCKER_USERNAME }}
 
-  build-multi-platform-manifest:
+  build-multi-platform-image:
     needs:
       - build-each-platform
       - config
       - docker-secrets
       - metadata
     if: github.event_name != 'pull_request'
-    name: "Build multi-platform manifest"
+    name: "Build and push multi-platform image"
     permissions:
       packages: write
-    uses: ./.github/workflows/docker-manifest.yml
+    uses: ./.github/workflows/docker-build-image.yml
     with:
+      image_labels: ${{ needs.metadata.outputs.image_labels }}
       image_tags: ${{ needs.metadata.outputs.image_tags }}
       platforms: ${{ needs.config.outputs.platforms }}
+      preload_artifact_name: image-tarballs
+      push: true
     secrets:
       docker_password: ${{ secrets.DOCKER_PASSWORD }}
       docker_username: ${{ secrets.DOCKER_USERNAME }}
 
+  # build-multi-platform-manifest:
+  #   needs:
+  #     - build-each-platform
+  #     - config
+  #     - docker-secrets
+  #     - metadata
+  #   if: github.event_name != 'pull_request'
+  #   name: "Build multi-platform manifest"
+  #   permissions:
+  #     packages: write
+  #   uses: ./.github/workflows/docker-manifest.yml
+  #   with:
+  #     image_tags: ${{ needs.metadata.outputs.image_tags }}
+  #     platforms: ${{ needs.config.outputs.platforms }}
+  #   secrets:
+  #     docker_password: ${{ secrets.DOCKER_PASSWORD }}
+  #     docker_username: ${{ secrets.DOCKER_USERNAME }}
+
   publish-readme:
     needs:
-      - build-multi-platform-manifest
+      - build-multi-platform-image
       - docker-secrets
     if: github.event_name == 'release' && !github.event.release.prerelease
     name: "Publish docs"
