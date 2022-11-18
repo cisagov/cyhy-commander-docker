@@ -14,10 +14,10 @@ on:
         description: "The Docker image name"
         value: cisagov/cyhy-commander
       data_artifact_name:
-        description: "The name of the data artifact"
-        value: data
+        description: "The name of the test data artifact"
+        value: test-output
       data_artifact_path:
-        description: "The path to the data artifact directory"
+        description: "The path to include in the test data artifact"
         value: tests/config/commander_data_volume
       test_image_artifact_name:
         description: "The name of the test image artifact"
