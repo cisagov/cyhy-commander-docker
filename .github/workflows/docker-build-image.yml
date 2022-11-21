@@ -54,10 +54,6 @@ on:
         description: "The name of the image tarball (name will be cleaned)"
         required: false
         type: string
-      preload_artifact_name:
-        description: "Preload images from tarballs in the specified artifact"
-        required: false
-        type: string
       push:
         default: false
         description: "Push the image to the registries (disables artifact upload)"
@@ -81,13 +77,9 @@ on:
       docker_username:
         description: "The username for the Docker hub account (required for push)"
         required: false
-      preload_artifact_key:
-        description: "Enables decryption of the preload artifact image tarballs if specified"
-        required: false
 
 env:
   OUTPUT_ARTIFACT_WORK_DIR: /tmp/output-artifact-work
-  PRELOAD_ARTIFACT_WORK_DIR: /tmp/preload-artifact-work
 
 jobs:
   build-image:
@@ -141,7 +133,6 @@ jobs:
       - name: Create directories for artifact work
         run: |
           mkdir -p ${{ env.OUTPUT_ARTIFACT_WORK_DIR }}
-          mkdir -p ${{ env.PRELOAD_ARTIFACT_WORK_DIR }}
 
       - name: Clean variables
         id: clean
@@ -166,40 +157,9 @@ jobs:
           fi
           echo "${delimiter}" >> $GITHUB_OUTPUT
 
-      - name: Check if preload artifact key is available
-        id: check_preload_artifact_key
-        run: |
-          if [ -n "${{ secrets.preload_artifact_key }}" ]; then
-            echo "do_decryption=true" >> $GITHUB_OUTPUT
-          else
-            echo "do_decryption=false" >> $GITHUB_OUTPUT
-          fi
-
-      - name: Download image artifact tarballs for preload
-        if: inputs.preload_artifact_name != ''
-        uses: actions/download-artifact@9782bd6a9848b53b110e712e20e42d89988822b7
-        with:
-          name: ${{ inputs.preload_artifact_name }}
-          path: ${{ env.PRELOAD_ARTIFACT_WORK_DIR }}
-
-      - name: Load unencrypted images
-        if: ${{ inputs.preload_artifact_name != '' && steps.check_preload_artifact_key.outputs.do_decryption == 'false' }}
-        run: |
-          for tarball in ${{ env.PRELOAD_ARTIFACT_WORK_DIR }}/*.tar; do
-            echo "Loading ${tarball}"
-            docker load -i "${tarball}"
-          done
-
-      - name: Load encrypted images
-        if: ${{ inputs.preload_artifact_name != '' && steps.check_preload_artifact_key.outputs.do_decryption == 'true' }}
-        run: |
-          for tarball in ${{ env.PRELOAD_ARTIFACT_WORK_DIR }}/*.tar.7z; do
-            echo "Loading ${tarball}"
-            7za x -p${{ secrets.preload_artifact_key }} -so "${tarball}" | docker load
-          done
 
       - name: Build image for push
-        if: inputs.push == true
+        if: inputs.push == 'true'
         uses: docker/build-push-action@c56af957549030174b10d6867f20e78cfd7debc5
         with:
           build-args: ${{ secrets.build_args }}
@@ -213,7 +173,7 @@ jobs:
           tags: ${{ steps.tag_suffix.outputs.tags }}
 
       - name: Build image for archive
-        if: inputs.push != true
+        if: inputs.push != 'true'
         uses: docker/build-push-action@c56af957549030174b10d6867f20e78cfd7debc5
         with:
           build-args: ${{ secrets.build_args }}
