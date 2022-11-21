@@ -30,9 +30,14 @@ on:
         description: "Number of days to retain the artifact"
         required: false
         type: number
-      cache_scope:
+      cache_from_scopes:
         default: "buildkit"
-        description: "The scope to use for GitHub Action Cache (name will be cleaned)"
+        description: "The GitHub Action Cache scopes to read from (name will be cleaned, CSV)"
+        required: false
+        type: string
+      cache_to_scope:
+        default: "buildkit"
+        description: "The GitHub Action Cache scope to write to (name will be cleaned)"
         required: false
         type: string
       docker_file:
@@ -137,8 +142,10 @@ jobs:
       - name: Clean variables
         id: clean
         run: |
-          # Replace illegal characters in cache scope
-          echo cache_scope=$(echo "${{ inputs.cache_scope }}" | sed -e 's/[^a-zA-Z0-9._-]/_/g') >> $GITHUB_OUTPUT
+          # Replace illegal characters in cache from scope list
+          echo cache_from_scopes=$(echo "${{ inputs.cache_from_scopes }}" | sed -e 's/[^a-zA-Z0-9.,_-]/_/g') >> $GITHUB_OUTPUT
+          # Replace illegal characters in cache to scope
+          echo cache_to_scope=$(echo "${{ inputs.cache_to_scope }}" | sed -e 's/[^a-zA-Z0-9._-]/_/g') >> $GITHUB_OUTPUT
           # Replace illegal characters in image tarball name
           echo image_tarball_name=$(echo "${{ inputs.image_tarball_name }}" | sed -e 's/[^a-zA-Z0-9._-]/_/g') >> $GITHUB_OUTPUT
           # Replace illegal characters in tag suffix
@@ -157,14 +164,30 @@ jobs:
           fi
           echo "${delimiter}" >> $GITHUB_OUTPUT
 
+      - name: Calculate GitHub Actions cache scopes
+        id: cache_scopes
+        run: |
+          # Create a list of cache object lines from the cleaned cache scope CSV
+          delimiter="$(openssl rand -hex 8)"
+          echo "from<<${delimiter}" >> $GITHUB_OUTPUT
+          for scope in $(echo ${{ steps.clean.outputs.cache_from_scopes }} | tr "," " "); do
+            echo "type=gha,scope=${scope}" >> $GITHUB_OUTPUT
+          done
+          echo "${delimiter}" >> $GITHUB_OUTPUT
+          # Create a cache object line if cache_to_scope is set
+          if [[ -n "${{ steps.clean.outputs.cache_to_scope }}" ]]; then
+            echo "to=type=gha,scope=${{ steps.clean.outputs.cache_to_scope }}" >> $GITHUB_OUTPUT
+          else
+            echo "to=" >> $GITHUB_OUTPUT
+          fi
 
       - name: Build image for push
         if: inputs.push == 'true'
         uses: docker/build-push-action@c56af957549030174b10d6867f20e78cfd7debc5
         with:
           build-args: ${{ secrets.build_args }}
-          cache-from: type=gha,scope=${{ steps.clean.outputs.cache_scope }}
-          cache-to: type=gha,mode=max,scope=${{ steps.clean.outputs.cache_scope }}
+          cache-from: ${{ steps.cache_scopes.outputs.from }}
+          cache-to: ${{ steps.cache_scopes.outputs.to }}
           context: .
           file: ${{ inputs.docker_file}}
           labels: ${{ inputs.image_labels }}
@@ -177,8 +200,8 @@ jobs:
         uses: docker/build-push-action@c56af957549030174b10d6867f20e78cfd7debc5
         with:
           build-args: ${{ secrets.build_args }}
-          cache-from: type=gha,scope=${{ steps.clean.outputs.cache_scope }}
-          cache-to: type=gha,mode=max,scope=${{ steps.clean.outputs.cache_scope }}
+          cache-from: ${{ steps.cache_scopes.outputs.from }}
+          cache-to: ${{ steps.cache_scopes.outputs.to }}
           context: .
           file: ${{ inputs.docker_file}}
           labels: ${{ inputs.image_labels }}

@@ -68,7 +68,8 @@ jobs:
     uses: ./.github/workflows/docker-build-image.yml
     with:
       artifact_name: ${{ needs.config.outputs.test_image_artifact_name }}
-      cache_scope: linux/amd64
+      cache_from_scopes: linux/amd64
+      cache_to_scope: linux/amd64
       image_labels: ${{ needs.metadata.outputs.image_labels }}
       platforms: linux/amd64
     secrets:
@@ -100,7 +101,8 @@ jobs:
     uses: ./.github/workflows/docker-build-image.yml
     with:
       artifact_name: image-tarballs
-      cache_scope: ${{ matrix.platform }}
+      cache_from_scopes: ${{ matrix.platform }}
+      cache_to_scope: ${{ matrix.platform }}
       image_labels: ${{ needs.metadata.outputs.image_labels }}
       image_tags: ${{ needs.metadata.outputs.image_tags }}
       image_tarball_name: ${{ matrix.platform }}.tar
@@ -121,10 +123,11 @@ jobs:
       packages: write
     uses: ./.github/workflows/docker-build-image.yml
     with:
+      cache_from_scopes: ${{ needs.config.outputs.platforms }}
+      cache_to_scope: ""
       image_labels: ${{ needs.metadata.outputs.image_labels }}
       image_tags: ${{ needs.metadata.outputs.image_tags }}
       platforms: ${{ needs.config.outputs.platforms }}
-      preload_artifact_name: image-tarballs
       push: true
     secrets:
       docker_password: ${{ secrets.DOCKER_PASSWORD }}
