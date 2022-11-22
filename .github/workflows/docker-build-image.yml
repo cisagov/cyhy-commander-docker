@@ -176,7 +176,7 @@ jobs:
           echo "${delimiter}" >> $GITHUB_OUTPUT
           # Create a cache object line if cache_to_scope is set
           if [[ -n "${{ steps.clean.outputs.cache_to_scope }}" ]]; then
-            echo "to=type=gha,scope=${{ steps.clean.outputs.cache_to_scope }}" >> $GITHUB_OUTPUT
+            echo "to=type=gha,mode=max,scope=${{ steps.clean.outputs.cache_to_scope }}" >> $GITHUB_OUTPUT
           else
             echo "to=" >> $GITHUB_OUTPUT
           fi
