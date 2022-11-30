@@ -66,7 +66,7 @@ on:
         type: boolean
       tag_suffix:
         default: ""
-        description: "Suffix to append to the image tags and cache scope (name will be cleaned)"
+        description: "Suffix to append to the image tags (name will be cleaned)"
         required: false
         type: string
     secrets:
