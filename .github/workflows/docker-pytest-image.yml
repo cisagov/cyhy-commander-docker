@@ -31,7 +31,7 @@ on:
         type: number
       image_tarball_name:
         default: image.tar
-        description: "The name of the image tarball to load"
+        description: "The name of the image tarball to load (name will be cleaned)"
         required: false
         type: string
       pip_cache_dir:
@@ -68,6 +68,12 @@ jobs:
         with:
           # TODO: change to 'egress-policy: block' after couple of runs
           egress-policy: audit
+
+      - name: Clean variables
+        id: clean
+        run: |
+          # Replace illegal characters in image tarball name
+          echo image_tarball_name=$(echo "${{ inputs.image_tarball_name }}" | sed -e 's/[^a-zA-Z0-9._-]/_/g') >> $GITHUB_OUTPUT
 
       - name: Check if data artifact key is available
         id: check_data_artifact_key
@@ -120,13 +126,13 @@ jobs:
       - name: Load unencrypted image
         if: steps.check_image_artifact_key.outputs.do_encryption == 'false'
         run: |
-          docker load < ${{ env.ARTIFACT_WORK_DIR }}/${{ inputs.image_tarball_name }}
+          docker load < ${{ env.ARTIFACT_WORK_DIR }}/${{ steps.clean.outputs.image_tarball_name }}
 
       - name: Load encrypted image
         if: steps.check_image_artifact_key.outputs.do_encryption == 'true'
         run: |
           7za x -p${{ secrets.image_artifact_key }} -so \
-          ${{ env.ARTIFACT_WORK_DIR }}/${{ inputs.image_tarball_name }}.7z | docker load
+          ${{ env.ARTIFACT_WORK_DIR }}/${{ steps.clean.outputs.image_tarball_name }}.7z | docker load
 
       - name: Set data directory permissions
         run: |
