@@ -140,7 +140,7 @@ def pytest_addoption(parser):
     )
 
 
-@pytest.fixture
+@pytest.fixture(scope="session")
 def image_tag(request):
     """Get the image tag to test."""
     return request.config.getoption("--image-tag")
