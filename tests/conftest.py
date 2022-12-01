@@ -9,7 +9,6 @@ import docker
 import pytest
 
 COMMANDER_DATA_VOLUME = "tests/config/commander_data_volume"
-MAIN_IMAGE_NAME = "local/test-image:latest"
 MAIN_SERVICE_NAME = "commander"
 MONGO_IMAGE_NAME = "mongo:3.6"
 MONGO_INIT_JS_FILE = "tests/config/mongo-init.js"
@@ -49,12 +48,12 @@ def docker_network():
 
 
 @pytest.fixture(scope="session")
-def main_container(docker_network):
+def main_container(docker_network, image_tag):
     """Fixture for the main Commander container."""
     # Create the container but don't start it yet.
     # Mongo must be running before the Commander can start.
     container = client.containers.create(
-        MAIN_IMAGE_NAME,
+        image_tag,
         detach=True,
         environment={
             "CONTAINER_VERBOSE": True,
@@ -75,10 +74,10 @@ def main_container(docker_network):
 
 
 @pytest.fixture(scope="session")
-def version_container():
+def version_container(image_tag):
     """Fixture for the version container."""
     container = client.containers.run(
-        MAIN_IMAGE_NAME,
+        image_tag,
         command="--version",
         detach=True,
         name=VERSION_SERVICE_NAME,
@@ -133,6 +132,18 @@ def pytest_addoption(parser):
     parser.addoption(
         "--runslow", action="store_true", default=False, help="run slow tests"
     )
+    parser.addoption(
+        "--image-tag",
+        action="store",
+        default="local/test-image:latest",
+        help="image tag to test",
+    )
+
+
+@pytest.fixture
+def image_tag(request):
+    """Get the image tag to test."""
+    return request.config.getoption("--image-tag")
 
 
 def pytest_collection_modifyitems(config, items):

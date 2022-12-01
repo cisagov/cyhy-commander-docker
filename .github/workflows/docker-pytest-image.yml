@@ -29,6 +29,11 @@ on:
         description: "Number of days to retain the test data artifact"
         required: false
         type: number
+      image_tag:
+        default: local/test-image:latest
+        description: "The name of the image tarball to load (name will be cleaned)"
+        required: false
+        type: string
       image_tarball_name:
         default: image.tar
         description: "The name of the image tarball to load (name will be cleaned)"
@@ -74,6 +79,8 @@ jobs:
         run: |
           # Replace illegal characters in image tarball name
           echo image_tarball_name=$(echo "${{ inputs.image_tarball_name }}" | sed -e 's/[^a-zA-Z0-9._-]/_/g') >> $GITHUB_OUTPUT
+          # Replace illegal characters in image tag
+          echo image_tag=$(echo "${{ inputs.image_tag }}" | sed -e 's/[^a-zA-Z0-9._-]/_/g') >> $GITHUB_OUTPUT
 
       - name: Check if data artifact key is available
         id: check_data_artifact_key
@@ -144,7 +151,7 @@ jobs:
           RELEASE_TAG: ${{ github.event.release.tag_name }}
         run: |
           set -o pipefail
-          pytest | tee ${{ inputs.data_artifact_path }}/pytests.log
+          pytest --image-tag ${{ steps.clean.outputs.image_tag }} | tee ${{ inputs.data_artifact_path }}/pytests.log
 
       - name: Compress data directory unencrypted
         if: steps.check_data_artifact_key.outputs.do_encryption == 'false'
