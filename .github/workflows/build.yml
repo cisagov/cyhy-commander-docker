@@ -23,6 +23,9 @@ permissions:
   actions: read
   contents: read
 
+env:
+  TEST_PLATFORM: linux/amd64
+
 jobs:
   config:
     name: "Config"
@@ -67,11 +70,11 @@ jobs:
       - metadata
     uses: ./.github/workflows/docker-build-image.yml
     with:
-      artifact_name: ${{ needs.config.outputs.test_image_artifact_name }}
-      cache_from_scopes: linux/amd64
-      cache_to_scope: linux/amd64
+      artifact_name: ${{ needs.config.outputs.image_tarball_artifact_name }}
+      cache_from_scopes: ${{ env.TEST_PLATFORM }}
+      cache_to_scope: ${{ env.TEST_PLATFORM }}
       image_labels: ${{ needs.metadata.outputs.image_labels }}
-      platforms: linux/amd64
+      platforms: ${{ env.TEST_PLATFORM }}
     secrets:
       build_args: |
         VERSION=${{ needs.metadata.outputs.source_version }}
@@ -85,7 +88,7 @@ jobs:
     with:
       data_artifact_name: ${{ needs.config.outputs.data_artifact_name }}
       data_artifact_path: ${{ needs.config.outputs.data_artifact_path }}
-      image_artifact_name: ${{ needs.config.outputs.test_image_artifact_name }}
+      image_artifact_name: ${{ needs.config.outputs.image_tarball_artifact_name }}
 
   build-each-platform:
     needs:
@@ -97,63 +100,44 @@ jobs:
     strategy:
       matrix:
         platform: ${{ fromJson(needs.config.outputs.platforms_json) }}
+        exclude:
+          - platform: ${{ env.TEST_PLATFORM }}
     name: "${{ matrix.platform }}"
     uses: ./.github/workflows/docker-build-image.yml
     with:
-      artifact_name: image-tarballs
+      artifact_name: ${{ needs.config.outputs.image_tarball_artifact_name }}
       cache_from_scopes: ${{ matrix.platform }}
       cache_to_scope: ${{ matrix.platform }}
       image_labels: ${{ needs.metadata.outputs.image_labels }}
       image_tags: ${{ needs.metadata.outputs.image_tags }}
       image_tarball_name: ${{ matrix.platform }}.tar
       platforms: ${{ matrix.platform }}
+      tag_suffix: ${{ matrix.platform }}
     secrets:
       build_args: |
         VERSION=${{ needs.metadata.outputs.source_version }}
 
-  build-multi-platform-image:
+  build-multi-arch-image:
     needs:
       - build-each-platform
       - config
       - docker-secrets
       - metadata
     if: github.event_name != 'pull_request'
-    name: "Build and push multi-platform image"
+    name: "Build and push multi-arch image"
     permissions:
       packages: write
-    uses: ./.github/workflows/docker-build-image.yml
+    uses: ./.github/workflows/docker-multi-arch-push.yml
     with:
-      cache_from_scopes: ${{ needs.config.outputs.platforms }}
-      cache_to_scope: ""
-      image_labels: ${{ needs.metadata.outputs.image_labels }}
+      artifact_name: ${{ needs.config.outputs.image_tarball_artifact_name }}
       image_tags: ${{ needs.metadata.outputs.image_tags }}
-      platforms: ${{ needs.config.outputs.platforms }}
-      push: true
     secrets:
       docker_password: ${{ secrets.DOCKER_PASSWORD }}
       docker_username: ${{ secrets.DOCKER_USERNAME }}
 
-  # build-multi-platform-manifest:
-  #   needs:
-  #     - build-each-platform
-  #     - config
-  #     - docker-secrets
-  #     - metadata
-  #   if: github.event_name != 'pull_request'
-  #   name: "Build multi-platform manifest"
-  #   permissions:
-  #     packages: write
-  #   uses: ./.github/workflows/docker-manifest.yml
-  #   with:
-  #     image_tags: ${{ needs.metadata.outputs.image_tags }}
-  #     platforms: ${{ needs.config.outputs.platforms }}
-  #   secrets:
-  #     docker_password: ${{ secrets.DOCKER_PASSWORD }}
-  #     docker_username: ${{ secrets.DOCKER_USERNAME }}
-
   publish-readme:
     needs:
-      - build-multi-platform-image
+      - build-multi-arch-image
       - docker-secrets
     if: github.event_name == 'release' && !github.event.release.prerelease
     name: "Publish docs"

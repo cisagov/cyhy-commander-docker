@@ -19,7 +19,7 @@ on:
       data_artifact_path:
         description: "The path to include in the test data artifact"
         value: tests/config/commander_data_volume
-      test_image_artifact_name:
+      image_tarball_artifact_name:
         description: "The name of the test image artifact"
         value: test-image
       platforms:

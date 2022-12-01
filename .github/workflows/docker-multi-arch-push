@@ -1,0 +1,120 @@
+---
+name: "Push Multi-Architecture Image"
+
+# This reusable workflow takes OCI image tarballs and pushes them
+# as a multi-architecture image to a registry.
+
+on:
+  workflow_call:
+    inputs:
+      # Required inputs
+      artifact_name:
+        description: "Artifact containing the image tarballs"
+        required: true
+        type: string
+      image_tags:
+        description: "The tags to apply to the image"
+        required: true
+        type: string
+    secrets:
+      artifact_key:
+        description: "Enables decryption of image tarballs"
+        required: false
+      docker_password:
+        description: "The password for the Docker hub account"
+        required: true
+      docker_username:
+        description: "The username for the Docker hub account"
+        required: true
+
+env:
+  ARTIFACT_WORK_DIR: /tmp/artifact-work
+
+jobs:
+  publish:
+    name: "Load and push multi-arch image"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@2e205a28d0e1da00c5f53b161f4067b052c61f34
+        with:
+          # TODO: change to 'egress-policy: block' after couple of runs
+          egress-policy: audit
+
+      - name: Check Docker credentials
+        run: |
+          return_code=0
+          if [ -z "${{ secrets.docker_username }}" ]; then
+            echo "::warning::Set the docker_username secret."
+            return_code=1
+          fi
+          if [ -z "${{ secrets.docker_password }}" ]; then
+            echo "::warning::Set the docker_password secret."
+            return_code=1
+          fi
+          exit $return_code
+
+      - uses: actions/checkout@93ea575cb5d8a053eaa0ac8fa3b40d7e05a33cc8
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@f4ef78c080cd8ba55a85445d5b36e214a81df20a
+        with:
+          username: ${{ secrets.docker_username }}
+          password: ${{ secrets.docker_password }}
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@f4ef78c080cd8ba55a85445d5b36e214a81df20a
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Download Docker images artifact
+        uses: actions/download-artifact@9782bd6a9848b53b110e712e20e42d89988822b7
+        with:
+          name: ${{ inputs.artifact_name }}
+          path: ${{ env.ARTIFACT_WORK_DIR }}
+
+      - name: Combine images and push
+        run: |
+          set -o errexit
+          set -o nounset
+          set -o pipefail
+          # Loop through all the tarballs in the directory
+          append="" # skip appending the first image
+          for tarball in "${{ env.ARTIFACT_WORK_DIR }}"/*; do
+              # If the filename ends in 7z, then decrypt it first
+              if [[ "${tarball}" == *".7z" ]]; then
+                  image_id=$(7za x -p${{ inputs.artifact_key }} -so "${tarball}" | docker load | sed "s/.*:\(.*\)$/\1/")
+              else
+                  image_id=$(docker load -i "${tarball}" | sed "s/.*:\(.*\)$/\1/")
+              fi
+
+              # Tag the image with the localhost registry
+              docker tag "${image_id}" "localhost:5000/single_arch:latest"
+
+              # Push the image to the localhost registry
+              docker push "localhost:5000/single_arch:latest"
+
+              # Create a multi-arch manifest for each image tag
+              for tag in ${{ inputs.image_tags }}; do
+                  # shellcheck disable=SC2086
+                  docker buildx imagetools create ${append} \
+                      --tag ${tag} \
+                      "localhost:5000/single_arch:latest"
+              done
+
+              # Clean up the local Docker image store
+              docker rmi "localhost:5000/single_arch:latest"
+
+              # Set the append flag for next iteration
+              append="--append"
+          done
+
+      - name: Inspect manifests
+        run: |
+          for tag in ${{ inputs.image_tags }}; do
+            echo "::group::Inspecting ${tag}"
+            docker buildx imagetools inspect "${tag}"
+            echo "::endgroup::"
+          done
