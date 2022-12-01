@@ -23,9 +23,6 @@ permissions:
   actions: read
   contents: read
 
-env:
-  TEST_PLATFORM: linux/amd64
-
 jobs:
   config:
     name: "Config"
@@ -71,10 +68,11 @@ jobs:
     uses: ./.github/workflows/docker-build-image.yml
     with:
       artifact_name: ${{ needs.config.outputs.image_tarball_artifact_name }}
-      cache_from_scopes: ${{ env.TEST_PLATFORM }}
-      cache_to_scope: ${{ env.TEST_PLATFORM }}
+      cache_from_scopes: ${{ needs.config.outputs.test_platform }}
+      cache_to_scope: ${{ needs.config.outputs.test_platform }}
+      image_tarball_name: ${{ needs.config.outputs.test_platform }}.tar
       image_labels: ${{ needs.metadata.outputs.image_labels }}
-      platforms: ${{ env.TEST_PLATFORM }}
+      platforms: ${{ needs.config.outputs.test_platform }}
     secrets:
       build_args: |
         VERSION=${{ needs.metadata.outputs.source_version }}
@@ -89,6 +87,7 @@ jobs:
       data_artifact_name: ${{ needs.config.outputs.data_artifact_name }}
       data_artifact_path: ${{ needs.config.outputs.data_artifact_path }}
       image_artifact_name: ${{ needs.config.outputs.image_tarball_artifact_name }}
+      image_tarball_name: ${{ needs.config.outputs.test_platform }}.tar
 
   build-each-platform:
     needs:
@@ -101,7 +100,7 @@ jobs:
       matrix:
         platform: ${{ fromJson(needs.config.outputs.platforms_json) }}
         exclude:
-          - platform: ${{ env.TEST_PLATFORM }}
+          - platform: ${{ needs.config.outputs.test_platform }}
     name: "${{ matrix.platform }}"
     uses: ./.github/workflows/docker-build-image.yml
     with:
@@ -109,10 +108,8 @@ jobs:
       cache_from_scopes: ${{ matrix.platform }}
       cache_to_scope: ${{ matrix.platform }}
       image_labels: ${{ needs.metadata.outputs.image_labels }}
-      image_tags: ${{ needs.metadata.outputs.image_tags }}
       image_tarball_name: ${{ matrix.platform }}.tar
       platforms: ${{ matrix.platform }}
-      tag_suffix: ${{ matrix.platform }}
     secrets:
       build_args: |
         VERSION=${{ needs.metadata.outputs.source_version }}

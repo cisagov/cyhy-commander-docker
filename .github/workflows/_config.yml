@@ -20,14 +20,17 @@ on:
         description: "The path to include in the test data artifact"
         value: tests/config/commander_data_volume
       image_tarball_artifact_name:
-        description: "The name of the test image artifact"
-        value: test-image
+        description: "The name of the image tarballs artifact"
+        value: image-tarballs
       platforms:
         description: "The platforms to build (CSV)"
         value: ${{ inputs.platforms }}
       platforms_json:
         description: "The platforms to build (JSON)"
         value: ${{ jobs.csv-to-json.outputs.platforms_json }}
+      test_platform:
+        description: "The platform to use for testing"
+        value: linux/amd64
 
 jobs:
   diagnostics:
