@@ -1,8 +1,8 @@
 ---
 name: "Push Multi-Architecture Image"
 
-# This reusable workflow takes OCI image tarballs and pushes them
-# as a multi-architecture image to a registry.
+# This reusable workflow reads OCI image tarballs from an artifact and publishes
+# a multi-architecture images to one or more registries.
 
 on:
   workflow_call:
@@ -109,7 +109,6 @@ jobs:
 
               # Create a multi-arch manifest for each image tag
               for tag in ${image_tags//\\n/ }; do
-                  # shellcheck disable=SC2086
                   docker buildx imagetools create ${append} \
                       --tag ${tag} \
                       "localhost:5000/single_arch:latest"
