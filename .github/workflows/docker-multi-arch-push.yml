@@ -75,14 +75,22 @@ jobs:
           name: ${{ inputs.artifact_name }}
           path: ${{ env.ARTIFACT_WORK_DIR }}
 
+      - name: Start local registry
+        run: |
+          docker run --detach --publish 5000:5000 --restart=always --name registry registry:2
+
       - name: Combine images and push
         run: |
           set -o errexit
           set -o nounset
           set -o pipefail
+
+          image_tags="${{ inputs.image_tags }}"
+
           # Loop through all the tarballs in the directory
           append="" # skip appending the first image
           for tarball in "${{ env.ARTIFACT_WORK_DIR }}"/*; do
+              echo "::group::Loading image from $tarball"
               # If the filename ends in 7z, then decrypt it first
               if [[ "${tarball}" == *".7z" ]]; then
                   image_id=$(7za x -p${{ inputs.artifact_key }} -so "${tarball}" | docker load | sed "s/.*:\(.*\)$/\1/")
@@ -97,7 +105,7 @@ jobs:
               docker push "localhost:5000/single_arch:latest"
 
               # Create a multi-arch manifest for each image tag
-              for tag in "${{ inputs.image_tags }}"; do
+              for tag in ${image_tags//\\n/ }; do
                   # shellcheck disable=SC2086
                   docker buildx imagetools create ${append} \
                       --tag ${tag} \
@@ -109,11 +117,20 @@ jobs:
 
               # Set the append flag for next iteration
               append="--append"
+              echo "::endgroup::"
           done
+
+      - name: Stop local registry
+        if: always()
+        run: |
+          docker stop registry
+          docker rm registry
 
       - name: Inspect manifests
         run: |
-          for tag in ${{ inputs.image_tags }}; do
+          image_tags="${{ inputs.image_tags }}"
+
+          for tag in ${image_tags//\\n/ }; do
             echo "::group::Inspecting ${tag}"
             docker buildx imagetools inspect "${tag}"
             echo "::endgroup::"
