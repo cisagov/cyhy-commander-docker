@@ -121,7 +121,7 @@ jobs:
       - docker-secrets
       - metadata
     if: github.event_name != 'pull_request'
-    name: "Build and push multi-arch image"
+    name: "Publish image"
     permissions:
       packages: write
     uses: ./.github/workflows/docker-multi-arch-push.yml
