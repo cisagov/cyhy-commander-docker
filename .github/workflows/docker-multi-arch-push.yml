@@ -93,10 +93,13 @@ jobs:
               echo "::group::Loading image from $tarball"
               # If the filename ends in 7z, then decrypt it first
               if [[ "${tarball}" == *".7z" ]]; then
-                  image_id=$(7za x -p${{ inputs.artifact_key }} -so "${tarball}" | docker load | sed "s/.*:\(.*\)$/\1/")
+                  7za x -p${{ inputs.artifact_key }} -so "${tarball}" | docker load
               else
-                  image_id=$(docker load -i "${tarball}" | sed "s/.*:\(.*\)$/\1/")
+                  docker load -i "${tarball}"
               fi
+
+              # Get the id of the image that was just loaded
+              image_id=$(docker image ls --format="{{.ID}}" | head -n 1)
 
               # Tag the image with the localhost registry
               docker tag "${image_id}" "localhost:5000/single_arch:latest"
