@@ -97,7 +97,7 @@ jobs:
               docker push "localhost:5000/single_arch:latest"
 
               # Create a multi-arch manifest for each image tag
-              for tag in ${{ inputs.image_tags }}; do
+              for tag in "${{ inputs.image_tags }}"; do
                   # shellcheck disable=SC2086
                   docker buildx imagetools create ${append} \
                       --tag ${tag} \
