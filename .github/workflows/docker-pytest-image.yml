@@ -29,11 +29,6 @@ on:
         description: "Number of days to retain the test data artifact"
         required: false
         type: number
-      image_tag:
-        default: local/test-image:latest
-        description: "The name of the image tarball to load"
-        required: false
-        type: string
       image_tarball_name:
         default: image.tar
         description: "The name of the image tarball to load (name will be cleaned)"
@@ -61,6 +56,7 @@ on:
 env:
   PIP_CACHE_DIR: ${{ inputs.pip_cache_dir }}
   ARTIFACT_WORK_DIR: /tmp/artifact-work
+  TEST_IMAGE_TAG: test-image:latest
 
 jobs:
   test:
@@ -139,6 +135,14 @@ jobs:
           7za x -p${{ secrets.image_artifact_key }} -so \
           ${{ env.ARTIFACT_WORK_DIR }}/${{ steps.clean.outputs.image_tarball_name }}.7z | docker load
 
+      - name: Tag image for testing
+        run: |
+          # Get the id of the image that was just loaded
+          image_id=$(docker image ls --format="{{.ID}}" | head -n 1)
+
+          # Tag the image with the a test tag
+          docker tag "${image_id}" "${{ env.TEST_IMAGE_TAG }}"
+
       - name: Set data directory permissions
         run: |
           chmod a+rwx ${{ inputs.data_artifact_path }}
@@ -149,7 +153,7 @@ jobs:
           RELEASE_TAG: ${{ github.event.release.tag_name }}
         run: |
           set -o pipefail
-          pytest --image-tag ${{ inputs.image_tag }} | tee ${{ inputs.data_artifact_path }}/pytests.log
+          pytest --image-tag ${{ env.TEST_IMAGE_TAG }} | tee ${{ inputs.data_artifact_path }}/pytest.log
 
       - name: Compress data directory unencrypted
         if: steps.check_data_artifact_key.outputs.do_encryption == 'false'
