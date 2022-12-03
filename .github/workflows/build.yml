@@ -135,6 +135,7 @@ jobs:
   publish-readme:
     needs:
       - build-multi-arch-image
+      - config
       - docker-secrets
     if: github.event_name == 'release' && !github.event.release.prerelease
     name: "Publish docs"
