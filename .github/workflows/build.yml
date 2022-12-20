@@ -32,7 +32,7 @@ jobs:
     name: "Metadata"
     needs:
       - config
-    uses: ./.github/workflows/docker-metadata.yml
+    uses: felddy/reusable-workflows/.github/workflows/docker-metadata.yml
     with:
       image_name: ${{ needs.config.outputs.image_name }}
 
@@ -57,7 +57,7 @@ jobs:
     name: "Lint"
     needs:
       - config
-    uses: ./.github/workflows/common-lint.yml
+    uses: felddy/reusable-workflows/.github/workflows/common-lint.yml
 
   build-test-image:
     name: "Build test image"
@@ -65,12 +65,12 @@ jobs:
       - config
       - lint
       - metadata
-    uses: ./.github/workflows/docker-build-image.yml
+    uses: felddy/reusable-workflows/.github/workflows/docker-build-image.yml
     with:
-      artifact_name: ${{ needs.config.outputs.image_tarball_artifact_name }}
+      artifact_name: ${{ needs.config.outputs.image_archive_artifact_name }}
       cache_from_scopes: ${{ needs.config.outputs.test_platform }}
       cache_to_scope: ${{ needs.config.outputs.test_platform }}
-      image_tarball_name: ${{ needs.config.outputs.test_platform }}.tar
+      image_archive_name_stem: ${{ needs.config.outputs.test_platform }}
       image_labels: ${{ needs.metadata.outputs.image_labels }}
       platforms: ${{ needs.config.outputs.test_platform }}
     secrets:
@@ -82,12 +82,12 @@ jobs:
     needs:
       - build-test-image
       - config
-    uses: ./.github/workflows/docker-pytest-image.yml
+    uses: felddy/reusable-workflows/.github/workflows/docker-pytest-image.yml
     with:
       data_artifact_name: ${{ needs.config.outputs.data_artifact_name }}
       data_artifact_path: ${{ needs.config.outputs.data_artifact_path }}
-      image_artifact_name: ${{ needs.config.outputs.image_tarball_artifact_name }}
-      image_tarball_name: ${{ needs.config.outputs.test_platform }}.tar
+      image_archive_name: ${{ needs.build-test-image.outputs.image_archive_name }}
+      image_artifact_name: ${{ needs.config.outputs.image_archive_artifact_name }}
 
   build-each-platform:
     needs:
@@ -102,13 +102,13 @@ jobs:
         exclude:
           - platform: ${{ needs.config.outputs.test_platform }}
     name: "${{ matrix.platform }}"
-    uses: ./.github/workflows/docker-build-image.yml
+    uses: felddy/reusable-workflows/.github/workflows/docker-build-image.yml
     with:
-      artifact_name: ${{ needs.config.outputs.image_tarball_artifact_name }}
+      artifact_name: ${{ needs.config.outputs.image_archive_artifact_name }}
       cache_from_scopes: ${{ matrix.platform }}
       cache_to_scope: ${{ matrix.platform }}
       image_labels: ${{ needs.metadata.outputs.image_labels }}
-      image_tarball_name: ${{ matrix.platform }}.tar
+      image_archive_name_stem: ${{ matrix.platform }}
       platforms: ${{ matrix.platform }}
     secrets:
       build_args: |
@@ -124,9 +124,9 @@ jobs:
     name: "Publish image"
     permissions:
       packages: write
-    uses: ./.github/workflows/docker-multi-arch-push.yml
+    uses: felddy/reusable-workflows/.github/workflows/docker-multi-arch-push.yml
     with:
-      artifact_name: ${{ needs.config.outputs.image_tarball_artifact_name }}
+      artifact_name: ${{ needs.config.outputs.image_archive_artifact_name }}
       image_tags: ${{ needs.metadata.outputs.image_tags }}
     secrets:
       docker_password: ${{ secrets.DOCKER_PASSWORD }}
@@ -139,7 +139,7 @@ jobs:
       - docker-secrets
     if: github.event_name == 'release' && !github.event.release.prerelease
     name: "Publish docs"
-    uses: ./.github/workflows/docker-publish-description.yml
+    uses: felddy/reusable-workflows/.github/workflows/docker-publish-description.yml
     with:
       image_name: ${{ needs.config.outputs.image_name }}
     secrets:
