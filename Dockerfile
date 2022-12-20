@@ -4,10 +4,17 @@ ARG CYHY_COMMANDER_VERSION=0.0.3-rc2
 ARG PYTHON_IMAGE_VERSION=2.7.18
 ARG VERSION
 
-FROM python:${PYTHON_IMAGE_VERSION} as build-stage
+FROM --platform=$BUILDPLATFORM tonistiigi/xx AS xx
+
+FROM --platform=$BUILDPLATFORM python:${PYTHON_IMAGE_VERSION} as build-stage
 
 ARG CYHY_COMMANDER_VERSION
 ENV PATH="/opt/venv/bin:$PATH"
+
+COPY --from=xx / /
+RUN apt-get update && apt-get install -y clang lld
+ARG TARGETPLATFORM
+RUN xx-apt install -y libc6-dev
 
 WORKDIR /root
 RUN \
