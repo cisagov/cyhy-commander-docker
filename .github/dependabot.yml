@@ -17,8 +17,10 @@ updates:
     schedule:
       interval: "weekly"
     ignore:
+      # Managed by cisagov/skeleton-generic
       - dependency-name: actions/cache
       - dependency-name: actions/checkout
+      - dependency-name: actions/setup-go
       - dependency-name: actions/setup-python
       # Managed by cisagov/cyhy-commander-docker
       # - dependency-name: actions/download-artifact
@@ -28,6 +30,7 @@ updates:
       # - dependency-name: docker/login-action
       # - dependency-name: docker/setup-buildx-action
       # - dependency-name: docker/setup-qemu-action
+      # - dependency-name: github/codeql-action
 
   - package-ecosystem: "pip"
     directory: "/"
