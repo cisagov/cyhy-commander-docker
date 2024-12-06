@@ -1,4 +1,3 @@
-#!/usr/bin/env pytest -vs
 """Tests for example container."""
 
 # Standard Python Libraries
@@ -11,9 +10,8 @@ import pytest
 ENV_VAR = "ECHO_MESSAGE"
 ENV_VAR_VAL = "Hello World from docker compose!"
 READY_MESSAGE = "This is a debug message"
-SECRET_QUOTE = (
-    "There are no secrets better kept than the secrets everybody guesses."  # nosec
-)
+DIVISION_MESSAGE = "8 / 2 == 4.000000"
+SECRET_QUOTE = "Three may keep a secret, if two of them are dead."  # nosec
 RELEASE_TAG = os.getenv("RELEASE_TAG")
 VERSION_FILE = "src/version.txt"
 
@@ -55,43 +53,32 @@ def test_output(dockerc, main_container):
     # make sure container exited if running test isolated
     dockerc.wait(main_container.id)
     log_output = main_container.logs()
+    assert DIVISION_MESSAGE in log_output, "Division message not found in log output."
     assert SECRET_QUOTE in log_output, "Secret not found in log output."
 
 
 @pytest.mark.skipif(
     RELEASE_TAG in [None, ""], reason="this is not a release (RELEASE_TAG not set)"
 )
-def test_release_version():
+def test_release_version(project_version):
     """Verify that release tag version agrees with the module version."""
-    pkg_vars = {}
-    with open(VERSION_FILE) as f:
-        exec(f.read(), pkg_vars)  # nosec
-    project_version = pkg_vars["__version__"]
     assert (
         RELEASE_TAG == f"v{project_version}"
     ), "RELEASE_TAG does not match the project version"
 
 
-def test_log_version(dockerc, version_container):
+def test_log_version(dockerc, project_version, version_container):
     """Verify the container outputs the correct version to the logs."""
     # make sure container exited if running test isolated
     dockerc.wait(version_container.id)
     log_output = version_container.logs().strip()
-    pkg_vars = {}
-    with open(VERSION_FILE) as f:
-        exec(f.read(), pkg_vars)  # nosec
-    project_version = pkg_vars["__version__"]
     assert (
         log_output == project_version
     ), f"Container version output to log does not match project version file {VERSION_FILE}"
 
 
-def test_container_version_label_matches(version_container):
+def test_container_version_label_matches(project_version, version_container):
     """Verify the container version label is the correct version."""
-    pkg_vars = {}
-    with open(VERSION_FILE) as f:
-        exec(f.read(), pkg_vars)  # nosec
-    project_version = pkg_vars["__version__"]
     assert (
         version_container.config.labels["org.opencontainers.image.version"]
         == project_version

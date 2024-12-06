@@ -19,11 +19,17 @@ updates:
       - dependency-name: actions/setup-go
       - dependency-name: actions/setup-python
 <<<<<<< HEAD
+<<<<<<< HEAD
       # Managed by cisagov/cyhy-commander-docker
 =======
+=======
+      - dependency-name: cisagov/setup-env-github-action
+>>>>>>> 0d48ebd47a28a887868ea3093e675e95f3843561
       - dependency-name: crazy-max/ghaction-dump-context
       - dependency-name: crazy-max/ghaction-github-labeler
       - dependency-name: crazy-max/ghaction-github-status
+      - dependency-name: GitHubSecurityLab/actions-permissions
+      - dependency-name: hashicorp/setup-packer
       - dependency-name: hashicorp/setup-terraform
       - dependency-name: mxschmitt/action-tmate
       - dependency-name: step-security/harden-runner
