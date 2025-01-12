@@ -36,10 +36,10 @@ updates:
       # Managed by cisagov/skeleton-docker
 >>>>>>> 1ea8a3fa98e790d66f8d5e10375f73c5be4d5fd5
       # - dependency-name: actions/download-artifact
-      # - dependency-name: actions/github-script
       # - dependency-name: actions/upload-artifact
       # - dependency-name: docker/build-push-action
       # - dependency-name: docker/login-action
+      # - dependency-name: docker/metadata-action
       # - dependency-name: docker/setup-buildx-action
       # - dependency-name: docker/setup-qemu-action
       # - dependency-name: github/codeql-action
