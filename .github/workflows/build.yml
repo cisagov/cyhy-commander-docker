@@ -414,8 +414,6 @@ jobs:
           path: ${{ env.BUILDX_CACHE_DIR }}
           restore-keys: |
             ${{ env.BASE_CACHE_KEY }}
-      - name: Create cross-platform support Dockerfile-x
-        run: ./buildx-dockerfile.sh
       - name: Build and push platform images to registries
         id: docker_build
         uses: docker/build-push-action@v6
@@ -423,7 +421,7 @@ jobs:
           cache-from: type=local,src=${{ env.BUILDX_CACHE_DIR }}
           cache-to: type=local,dest=${{ env.BUILDX_CACHE_DIR }}
           context: .
-          file: ./Dockerfile-x
+          file: ./Dockerfile
           labels: ${{ needs.prepare.outputs.labels }}
           platforms: |
             linux/amd64
