@@ -439,11 +439,15 @@ jobs:
           tags: ${{ needs.prepare.outputs.tags }}
           # For a list of pre-defined annotation keys and value types see:
           # https://github.com/opencontainers/image-spec/blob/master/annotations.md
-      - name: Publish README.md to Docker Hub
-        env:
-          DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
-          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
-        run: ./push_readme.sh
+      - if: ${{ github.ref_name == 'develop' && github.event_name == 'push' }}
+        name: Update the Docker Hub description
+        uses: peter-evans/dockerhub-description@v4
+        with:
+          description: README.md
+          password: ${{ secrets.DOCKER_PASSWORD }}
+          repository: ${{ env.IMAGE_NAME }}
+          short-description: ${{ github.event.repository.description }}
+          username: ${{ secrets.DOCKER_USERNAME }}
       - name: Setup tmate debug session
         uses: mxschmitt/action-tmate@v3
         if: env.RUN_TMATE
