@@ -41,6 +41,7 @@ updates:
 >>>>>>> 1ea8a3fa98e790d66f8d5e10375f73c5be4d5fd5
       # - dependency-name: actions/download-artifact
       # - dependency-name: actions/upload-artifact
+      # - dependency-name: aquasecurity/trivy-action
       # - dependency-name: docker/build-push-action
       # - dependency-name: docker/login-action
       # - dependency-name: docker/metadata-action
