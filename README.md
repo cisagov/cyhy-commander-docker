@@ -6,6 +6,7 @@
 [![Known Vulnerabilities](https://snyk.io/test/github/cisagov/cyhy-commander-docker/badge.svg)](https://snyk.io/test/github/cisagov/cyhy-commander-docker)
 =======
 [![GitHub Build Status](https://github.com/cisagov/skeleton-docker/workflows/build/badge.svg)](https://github.com/cisagov/skeleton-docker/actions/workflows/build.yml)
+[![License](https://img.shields.io/github/license/cisagov/skeleton-docker)](https://spdx.org/licenses/)
 [![CodeQL](https://github.com/cisagov/skeleton-docker/workflows/CodeQL/badge.svg)](https://github.com/cisagov/skeleton-docker/actions/workflows/codeql-analysis.yml)
 >>>>>>> 00e680c776aca6363f87eeea9a774e6466a5007f
 
